@@ -1,49 +1,41 @@
 'use strict';
-const Database = require('better-sqlite3');
-const path     = require('path');
-const fs       = require('fs');
+const fs   = require('fs');
+const path = require('path');
 
-const dbPath = process.env.DATABASE_URL || path.join(__dirname, '../../data/primeclean.db');
-fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+const dataDir = process.env.DATA_DIR || path.join(__dirname, '../../data');
+fs.mkdirSync(dataDir, { recursive: true });
 
-const db = new Database(dbPath);
+const leadsFile    = path.join(dataDir, 'leads.json');
+const sessionsFile = path.join(dataDir, 'sessions.json');
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS leads (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    name       TEXT,
-    phone      TEXT,
-    service    TEXT,
-    message    TEXT,
-    source     TEXT DEFAULT 'form',
-    created_at TEXT DEFAULT (datetime('now'))
-  );
+function readJSON(file) {
+  try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return []; }
+}
 
-  CREATE TABLE IF NOT EXISTS chat_sessions (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    session_id TEXT UNIQUE,
-    messages   TEXT,
-    updated_at TEXT DEFAULT (datetime('now'))
-  );
-`);
+function writeJSON(file, data) {
+  fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
+}
 
 function saveLead({ name, phone, service, message, source }) {
-  return db.prepare(
-    'INSERT INTO leads (name, phone, service, message, source) VALUES (?, ?, ?, ?, ?)'
-  ).run(name, phone, service, message, source || 'form');
+  const leads = readJSON(leadsFile);
+  const lead = { id: Date.now(), name, phone, service, message, source: source || 'form', created_at: new Date().toISOString() };
+  leads.push(lead);
+  writeJSON(leadsFile, leads);
+  return lead;
 }
 
 function saveSession(sessionId, messages) {
-  return db.prepare(`
-    INSERT INTO chat_sessions (session_id, messages, updated_at)
-    VALUES (?, ?, datetime('now'))
-    ON CONFLICT(session_id) DO UPDATE SET messages = excluded.messages, updated_at = excluded.updated_at
-  `).run(sessionId, JSON.stringify(messages));
+  const sessions = readJSON(sessionsFile);
+  const idx = sessions.findIndex(s => s.session_id === sessionId);
+  const entry = { session_id: sessionId, messages, updated_at: new Date().toISOString() };
+  if (idx >= 0) sessions[idx] = entry; else sessions.push(entry);
+  writeJSON(sessionsFile, sessions);
 }
 
 function getSession(sessionId) {
-  const row = db.prepare('SELECT messages FROM chat_sessions WHERE session_id = ?').get(sessionId);
-  return row ? JSON.parse(row.messages) : [];
+  const sessions = readJSON(sessionsFile);
+  const row = sessions.find(s => s.session_id === sessionId);
+  return row ? row.messages : [];
 }
 
 module.exports = { saveLead, saveSession, getSession };
