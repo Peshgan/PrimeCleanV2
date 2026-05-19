@@ -199,6 +199,14 @@ function initScrollExp() {
     }
   }, { passive: true });
 
+  // Force video load on iOS (ignores preload="auto")
+  sv.load();
+  // iOS requires a play() call before seeking is possible
+  const unlockScrollVideo = () => {
+    sv.play().then(() => { sv.pause(); sv.currentTime = 0; }).catch(() => {});
+  };
+  document.addEventListener('touchstart', unlockScrollVideo, { once: true, passive: true });
+
   // Initial render
   targetProg = smoothProg = getScrollProgress();
   applyProgress(smoothProg);
@@ -756,6 +764,16 @@ function initAgent() {
   const sTalk     = document.getElementById('agent-s-talk');
 
   if (!widget) return;
+
+  // ── Safari/iOS: WebM with alpha not supported — use static PNG fallback ──
+  const webmOk = document.createElement('video').canPlayType('video/webm; codecs="vp9"') !== '';
+  if (!webmOk) {
+    [sIdle, sGreet, sTalk].forEach(v => { if (v) v.style.display = 'none'; });
+    const img = document.createElement('img');
+    img.src = 'motion/ai_agent/agent_no_booble_no_background.png';
+    img.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;object-position:bottom center;';
+    if (character) character.appendChild(img);
+  }
 
   // ── Config (replace DEEPSEEK_URL with /api/chat when backend deployed) ──
   const DEEPSEEK_URL  = 'https://api.deepseek.com/chat/completions';
