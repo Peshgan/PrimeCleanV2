@@ -583,10 +583,10 @@ function initButterflies(PERF) {
 
   // ── Load Higgsfield butterfly sprites ──
   const SPRITE_SRCS = [
-    'motion/image/bf1_blue.png',
-    'motion/image/bf2_cyan.png',
-    'motion/image/bf3_purple.png',
-    'motion/image/bf4_golden.png',
+    'motion/image/bf1_blue.webp',
+    'motion/image/bf2_cyan.webp',
+    'motion/image/bf3_purple.webp',
+    'motion/image/bf4_golden.webp',
   ];
   const sprites = [];
   let spritesReady = 0;
