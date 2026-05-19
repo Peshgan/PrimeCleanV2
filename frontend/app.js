@@ -119,10 +119,11 @@ function initScrollExp() {
   // ── Scroll state ──
   let targetProg  = 0;
   let smoothProg  = 0;
-  let velocity    = 0;       // spring velocity
-  const STIFFNESS = 0.018;   // spring pull strength
-  const DAMPING   = 0.78;    // friction — higher = more glide
+  let velocity    = 0;
+  const STIFFNESS = 0.018;
+  const DAMPING   = 0.78;
   let isAnimating = false;
+  const isMobile  = 'ontouchstart' in window;
 
   function getScrollProgress() {
     const rect      = section.getBoundingClientRect();
@@ -131,40 +132,34 @@ function initScrollExp() {
   }
 
   function applyProgress(p) {
-    // Video — direct seek, browser buffers handle smoothness
     if (sv.readyState >= 2 && sv.duration) {
       sv.currentTime = p * sv.duration;
     }
-
-    // Chapters
     let activeIdx = -1;
     chapDefs.forEach((c, i) => {
       const visible = p >= c.from && p < c.to;
       c.el.classList.toggle('visible', visible);
       if (visible) {
         activeIdx = i;
-        const cp     = (p - c.from) / Math.max(0.001, c.to - c.from);
-        const offset = (cp - 0.5) * 60;
-        c.el.querySelectorAll('[data-parallax]').forEach(el => {
-          const factor = parseFloat(el.dataset.parallax) || 0;
-          el.style.transform = `translateY(${offset * factor}px)`;
-        });
-        c.el.querySelectorAll('.chap-img-card').forEach(el => {
-          el.style.setProperty('--py', `${offset * 0.2}px`);
-        });
+        if (!isMobile) {
+          const cp     = (p - c.from) / Math.max(0.001, c.to - c.from);
+          const offset = (cp - 0.5) * 60;
+          c.el.querySelectorAll('[data-parallax]').forEach(el => {
+            el.style.transform = `translateY(${(parseFloat(el.dataset.parallax) || 0) * offset}px)`;
+          });
+          c.el.querySelectorAll('.chap-img-card').forEach(el => {
+            el.style.setProperty('--py', `${offset * 0.2}px`);
+          });
+        }
       }
     });
     if (p >= chapDefs[chapDefs.length - 1].from) {
       chapDefs[chapDefs.length - 1].el.classList.add('visible');
       activeIdx = chapDefs.length - 1;
     }
-
-    // Dots + ring
     dots.forEach((d, i) => d.classList.toggle('active', i === activeIdx));
     ringFill.style.strokeDashoffset = CIRCUMFERENCE * (1 - p);
     progPct.textContent = Math.round(p * 100) + '%';
-
-    // WebGL
     if (glState && hasDrawElement) {
       renderToCanvas(glState, document.getElementById('chapters'), p);
     }
@@ -172,28 +167,23 @@ function initScrollExp() {
 
   function tick() {
     const diff = targetProg - smoothProg;
-
-    // Spring: accelerate toward target, apply damping
     velocity  += diff * STIFFNESS;
     velocity  *= DAMPING;
     smoothProg += velocity;
-
-    // Stop loop when both position and velocity are negligible
     if (Math.abs(diff) < 0.00015 && Math.abs(velocity) < 0.00015) {
-      smoothProg  = targetProg;
-      velocity    = 0;
-      isAnimating = false;
-      applyProgress(smoothProg);
-      return;
+      smoothProg = targetProg; velocity = 0; isAnimating = false;
+      applyProgress(smoothProg); return;
     }
-
     applyProgress(smoothProg);
     requestAnimationFrame(tick);
   }
 
   window.addEventListener('scroll', () => {
     targetProg = getScrollProgress();
-    if (!isAnimating) {
+    if (isMobile) {
+      // На мобильных — прямое применение без spring-физики
+      applyProgress(targetProg);
+    } else if (!isAnimating) {
       isAnimating = true;
       requestAnimationFrame(tick);
     }
@@ -765,13 +755,16 @@ function initAgent() {
 
   if (!widget) return;
 
-  // ── Safari/iOS: WebM with alpha not supported — use static PNG fallback ──
-  const webmOk = document.createElement('video').canPlayType('video/webm; codecs="vp9"') !== '';
-  if (!webmOk) {
+  // ── Safari/iOS: WebM alpha не поддерживается — статическая PNG-заглушка ──
+  const isIOS = /iPad|iPhone|iPod/i.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  const needsWebmFallback = isIOS || isSafari;
+  if (needsWebmFallback) {
     [sIdle, sGreet, sTalk].forEach(v => { if (v) v.style.display = 'none'; });
     const img = document.createElement('img');
     img.src = 'motion/ai_agent/agent_no_booble_no_background.png';
-    img.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;object-position:bottom center;';
+    img.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;object-position:bottom center;pointer-events:none;';
     if (character) character.appendChild(img);
   }
 
@@ -1033,6 +1026,7 @@ function initAgent() {
   }
 
   character.addEventListener('click', openChat);
+  character.addEventListener('touchend', e => { e.preventDefault(); openChat(); }, { passive: false });
   character.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') openChat(); });
   closeBtn.addEventListener('click', closeChat);
 
