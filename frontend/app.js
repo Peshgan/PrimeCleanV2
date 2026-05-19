@@ -882,7 +882,10 @@ function initAgent() {
       const colorPx = safariTmpCtx.getImageData(0, 0,     dispW, dispH);
       const alphaPx = safariTmpCtx.getImageData(0, dispH, dispW, dispH);
       const cd = colorPx.data, ad = alphaPx.data;
-      for (let i = 0; i < cd.length; i += 4) cd[i + 3] = ad[i] < 16 ? 0 : ad[i];
+      for (let i = 0; i < cd.length; i += 4) {
+        const a = ad[i];
+        cd[i + 3] = a < 48 ? 0 : a;
+      }
 
       safariCtx.clearRect(0, 0, dispW, dispH);
       safariCtx.putImageData(colorPx, 0, 0);

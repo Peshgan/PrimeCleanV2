@@ -1269,8 +1269,8 @@ body[data-perf="low"] #pl-sound       { backdrop-filter: none; }
 ═══════════════════════════════════════════ */
 .agent-widget {
   position: fixed;
-  bottom: 28px;
-  right: 24px;
+  bottom: max(28px, calc(env(safe-area-inset-bottom, 0px) + 16px));
+  right: max(24px, calc(env(safe-area-inset-right, 0px) + 24px));
   z-index: 9000;
   display: flex;
   align-items: flex-end;
@@ -1494,6 +1494,11 @@ body[data-perf="low"] #pl-sound       { backdrop-filter: none; }
 
 /* Hint — теперь встроен в .agent-intro, отдельный элемент не нужен */
 .agent-hint { display: none; }
+
+/* Safari dual-plane canvas — screen blend removes black background */
+.agent-character canvas { mix-blend-mode: screen; }
+/* Regular WebM videos on Chrome — screen removes black if no alpha */
+.agent-state { mix-blend-mode: screen; }
 
 /* ── Chat panel ── */
 .agent-chat {
@@ -1804,34 +1809,43 @@ body[data-perf="low"] #pl-sound       { backdrop-filter: none; }
 /* ── Responsive ── */
 @media (max-width: 600px) {
   .agent-widget {
-    bottom: 14px;
-    right: 10px;
+    bottom: max(12px, calc(env(safe-area-inset-bottom, 0px) + 8px));
+    right: max(10px, calc(env(safe-area-inset-right, 0px) + 10px));
     gap: 6px;
     align-items: flex-end;
   }
-  .agent-character { width: 110px; height: 165px; }
-  .agent-greet-bubble { min-width: 160px; max-width: 190px; font-size: 11px; bottom: calc(100% + 52px); }
+  .agent-character { width: 130px; height: 195px; }
+  /* Softer masks — bigger visible zone for smaller container */
+  #agent-s-idle {
+    -webkit-mask-image: radial-gradient(ellipse 95% 92% at 50% 54%, black 58%, rgba(0,0,0,.45) 82%, rgba(0,0,0,0) 100%);
+    mask-image:         radial-gradient(ellipse 95% 92% at 50% 54%, black 58%, rgba(0,0,0,.45) 82%, rgba(0,0,0,0) 100%);
+  }
+  #agent-s-greet, #agent-s-talk {
+    -webkit-mask-image: radial-gradient(ellipse 95% 96% at 50% 50%, black 54%, rgba(0,0,0,.45) 80%, rgba(0,0,0,0) 100%);
+    mask-image:         radial-gradient(ellipse 95% 96% at 50% 50%, black 54%, rgba(0,0,0,.45) 80%, rgba(0,0,0,0) 100%);
+  }
+  .agent-greet-bubble { min-width: 160px; max-width: 200px; font-size: 11px; bottom: calc(100% + 52px); }
   .agent-chat {
-    width: calc(100vw - 140px);
+    width: calc(100vw - 155px);
     min-width: 200px;
-    max-height: 60vh;        /* не выходит за экран */
+    max-height: 60vh;
     border-radius: 16px;
   }
   .agent-messages { max-height: calc(60vh - 130px); }
 }
 
 @media (max-width: 420px) {
-  /* На очень узких экранах — чат поверх персонажа, персонаж сбоку */
-  .agent-widget {
-    flex-direction: row;
-    align-items: flex-end;
-  }
-  .agent-character { width: 90px; height: 135px; flex-shrink: 0; }
+  .agent-character { width: 110px; height: 165px; flex-shrink: 0; }
   .agent-greet-bubble { min-width: 140px; max-width: 170px; bottom: calc(100% + 46px); }
   .agent-chat {
-    width: calc(100vw - 120px);
+    width: calc(100vw - 135px);
     min-width: 0;
   }
+}
+
+@media (max-width: 360px) {
+  .agent-character { width: 90px; height: 135px; }
+  .agent-chat { width: calc(100vw - 110px); }
 }
 
 /* ══════════════════════════════════════════
