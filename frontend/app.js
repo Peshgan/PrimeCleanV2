@@ -1374,7 +1374,7 @@ function initForm() {
     if (!fsOverlay) return;
     // Аналитика: конверсия при отправке формы
     if (typeof gtag === 'function') gtag('event', 'conversion', { event_category: 'lead', event_label: 'form_submit' });
-    if (typeof ym === 'function') ym(00000000, 'reachGoal', 'form_submit');
+    if (typeof ym === 'function') ym(0, 'reachGoal', 'form_submit');
     // сбросить анимации переоткрывая оверлей
     fsOverlay.hidden = false;
     // перезапуск CSS-анимаций карточки
