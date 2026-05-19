@@ -1,5 +1,4 @@
 'use strict';
-const fetch = require('node-fetch');
 
 const BASE = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}`;
 

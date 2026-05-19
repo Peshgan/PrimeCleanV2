@@ -1,5 +1,4 @@
 'use strict';
-const fetch = require('node-fetch');
 
 const DEEPSEEK_URL = 'https://api.deepseek.com/chat/completions';
 
