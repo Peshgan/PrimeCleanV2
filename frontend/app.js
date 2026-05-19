@@ -974,7 +974,6 @@ function initAgent() {
   }
 
   function openChat() {
-    hideGreetBubble();
     hint.classList.remove('visible');
     clearTimeout(hintTimer);
     clearInterval(widget._hintLoop);
