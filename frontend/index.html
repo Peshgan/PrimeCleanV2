@@ -2,11 +2,20 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PrimeClean</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="PrimeClean — профессиональный клининг в Беларуси. Уборка квартир, офисов, после ремонта. Без предоплаты. Звонок за 15 минут. +375 (44) 478-93-60">
+  <meta name="theme-color" content="#06080f">
+  <meta property="og:title" content="PrimeClean — Клининг в Беларуси">
+  <meta property="og:description" content="Профессиональный клининг: квартиры, офисы, после ремонта. От 80 BYN. Без предоплаты.">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="ru_BY">
+  <title>PrimeClean — Профессиональный клининг в Беларуси</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <!-- Backend API URL — set to your Railway URL for production -->
+  <script>window.PC_API = '';</script>
 
   <!-- ══════ Google Analytics 4 ══════ -->
   <!-- Замени G-XXXXXXXXXX на свой Measurement ID из analytics.google.com -->
@@ -76,8 +85,8 @@
       <!-- STICKY VIEWPORT -->
       <div id="scroll-sticky">
 
-        <!-- VIDEO (scroll-driven) -->
-        <video id="sv" muted preload="auto" playsinline>
+        <!-- VIDEO (scroll-driven) — metadata only, loaded on demand -->
+        <video id="sv" muted preload="metadata" playsinline
           <source src="motion/video/Backgroundscrollanimation.mp4" type="video/mp4">
         </video>
 
@@ -491,8 +500,8 @@
 
     </div><!-- /ai-agent -->
 
-    <!-- Agent greeting audio -->
-    <audio id="agent-voice" src="motion/ai_agent/start_agent_voice.mp3" preload="auto"></audio>
+    <!-- Agent greeting audio — lazy, loads on first agent open -->
+    <audio id="agent-voice" src="motion/ai_agent/start_agent_voice.mp3" preload="none"></audio>
 
   </div><!-- /site -->
 

@@ -1,22 +1,39 @@
 'use strict';
-const express = require('express');
-const { chat }                     = require('../services/ai');
-const { saveSession, getSession }  = require('../services/db');
+const express   = require('express');
+const rateLimit = require('express-rate-limit');
+const { chat }  = require('../services/ai');
 
 const router = express.Router();
 
-router.post('/', async (req, res) => {
-  const { message, sessionId } = req.body;
-  if (!message || !sessionId) return res.status(400).json({ error: 'message and sessionId required' });
+// 20 AI requests per IP per minute
+const chatLimit = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  message: { error: 'Too many AI requests. Please wait a moment.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+router.post('/', chatLimit, async (req, res) => {
+  const { messages } = req.body;
+
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return res.status(400).json({ error: 'messages array is required' });
+  }
+  if (messages.length > 40) {
+    return res.status(400).json({ error: 'conversation too long' });
+  }
+
+  const last = messages[messages.length - 1];
+  if (!last || last.role !== 'user' || typeof last.content !== 'string') {
+    return res.status(400).json({ error: 'last message must be from user' });
+  }
+  if (last.content.trim().length === 0 || last.content.length > 2000) {
+    return res.status(400).json({ error: 'message length invalid' });
+  }
 
   try {
-    const history = getSession(sessionId);
-    history.push({ role: 'user', content: message });
-
-    const reply = await chat(history);
-    history.push({ role: 'assistant', content: reply });
-
-    saveSession(sessionId, history);
+    const reply = await chat(messages);
     res.json({ reply });
   } catch (err) {
     console.error('[chat]', err.message);

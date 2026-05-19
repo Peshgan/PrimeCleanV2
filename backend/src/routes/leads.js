@@ -1,13 +1,25 @@
 'use strict';
-const express  = require('express');
-const { saveLead }     = require('../services/db');
-const { notifyLead }   = require('../services/telegram');
+const express   = require('express');
+const rateLimit = require('express-rate-limit');
+const { saveLead }   = require('../services/db');
+const { notifyLead } = require('../services/telegram');
 
 const router = express.Router();
 
-router.post('/', async (req, res) => {
+// 5 leads per IP per 10 minutes (anti-spam)
+const leadsLimit = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 5,
+  message: { error: 'Too many submissions. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+router.post('/', leadsLimit, async (req, res) => {
   const { name, phone, service, message, source } = req.body;
-  if (!phone) return res.status(400).json({ error: 'phone required' });
+  if (!phone || typeof phone !== 'string' || phone.length < 7) {
+    return res.status(400).json({ error: 'valid phone required' });
+  }
 
   try {
     saveLead({ name, phone, service, message, source });

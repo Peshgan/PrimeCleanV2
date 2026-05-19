@@ -6,6 +6,11 @@
 ═══════════════════════════════════════════════════ */
 'use strict';
 
+// ─── Backend API URL ──────────────────────────────────────────────────────────
+// window.PC_API is set in index.html <script> tag.
+// '' = same origin (Vercel co-host). Set to Railway URL for separate backend.
+const API_URL = (window.PC_API || '').replace(/\/$/, '');
+
 /* ═══════════════════════════════
    1. PRELOADER
 ═══════════════════════════════ */
@@ -62,27 +67,54 @@
 
 
 /* ═══════════════════════════════
-   2. SITE INIT
+   2. PERFORMANCE DETECTION
+═══════════════════════════════ */
+function detectPerf() {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return 'low';
+  const mem = navigator.deviceMemory;
+  if (mem !== undefined) {
+    if (mem <= 1) return 'low';
+    if (mem <= 4) return 'medium';
+  }
+  const cores = navigator.hardwareConcurrency;
+  if (cores !== undefined) {
+    if (cores <= 2) return 'low';
+    if (cores <= 4) return 'medium';
+  }
+  const conn = navigator.connection;
+  if (conn) {
+    if (conn.saveData || conn.effectiveType === 'slow-2g' || conn.effectiveType === '2g') return 'low';
+    if (conn.effectiveType === '3g') return 'medium';
+  }
+  if (window.innerWidth < 480) return 'medium';
+  return 'high';
+}
+
+/* ═══════════════════════════════
+   3. SITE INIT
 ═══════════════════════════════ */
 function initSite() {
-  initScrollExp();
+  const PERF = detectPerf();
+  document.body.dataset.perf = PERF;
+
+  initScrollExp(PERF);
   initNav();
   initForm();
   initCardTilt();
   initServicesReveal();
-  initButterflies();
+  if (PERF !== 'low') initButterflies(PERF);
   initSoundFX();
   initAgent();
 }
 
 
 /* ═══════════════════════════════
-   3. SCROLL EXPERIENCE
+   4. SCROLL EXPERIENCE
    – Video driven by scroll
    – HTML chapters visible by progress
    – HTML-in-Canvas: WebGL renders chapters with shaders
 ═══════════════════════════════ */
-function initScrollExp() {
+function initScrollExp(PERF) {
   const section  = document.getElementById('scroll-exp');
   const sticky   = document.getElementById('scroll-sticky');
   const sv       = document.getElementById('sv');
@@ -141,7 +173,7 @@ function initScrollExp() {
       c.el.classList.toggle('visible', visible);
       if (visible) {
         activeIdx = i;
-        if (!isMobile) {
+        if (!isMobile && PERF !== 'low') {
           const cp     = (p - c.from) / Math.max(0.001, c.to - c.from);
           const offset = (cp - 0.5) * 60;
           c.el.querySelectorAll('[data-parallax]').forEach(el => {
@@ -409,23 +441,30 @@ function initCursor() {
   let mx = window.innerWidth / 2;
   let my = window.innerHeight / 2;
   let rx = mx, ry = my;
+  let ringRaf = null;
+
+  function lerp(a, b, t) { return a + (b - a) * t; }
+
+  function animRing() {
+    ringRaf = null;
+    const dx = mx - rx, dy = my - ry;
+    rx += dx * 0.11;
+    ry += dy * 0.11;
+    ring.style.left = rx + 'px';
+    ring.style.top  = ry + 'px';
+    // keep running only while ring hasn't caught up
+    if (Math.abs(dx) > 0.3 || Math.abs(dy) > 0.3) {
+      ringRaf = requestAnimationFrame(animRing);
+    }
+  }
 
   document.addEventListener('mousemove', e => {
     mx = e.clientX;
     my = e.clientY;
     dot.style.left = mx + 'px';
     dot.style.top  = my + 'px';
+    if (!ringRaf) ringRaf = requestAnimationFrame(animRing);
   }, { passive: true });
-
-  // Smooth ring follows with lerp
-  function lerp(a, b, t) { return a + (b - a) * t; }
-  (function animRing() {
-    rx = lerp(rx, mx, 0.11);
-    ry = lerp(ry, my, 0.11);
-    ring.style.left = rx + 'px';
-    ring.style.top  = ry + 'px';
-    requestAnimationFrame(animRing);
-  })();
 
   // Hover state: links, buttons
   const hoverEls = document.querySelectorAll('a, button, .chap-img-card, .hdr-cta, .c4-cta, #form-btn');
@@ -507,7 +546,7 @@ function initServicesReveal() {
 /* ═══════════════════════════════
    10. BUTTERFLIES
 ═══════════════════════════════ */
-function initButterflies() {
+function initButterflies(PERF) {
   const section = document.getElementById('services');
   if (!section) return;
 
@@ -585,7 +624,7 @@ function initButterflies() {
       wobble: 0, wobbleV: 0,
     };
   }
-  const N = 18;
+  const N = PERF === 'high' ? 18 : 9;
   const bs = Array.from({ length: N }, (_, i) => mkB(i));
 
   // Pick target well spread from other butterflies (best of 8 random candidates)
@@ -667,7 +706,13 @@ function initButterflies() {
   }
 
   /* ── Physics + render ── */
+  let bfRaf = null;
+  let bfSectionVisible = false;
+
   function tick() {
+    bfRaf = null;
+    if (document.hidden || !bfSectionVisible) return;
+
     ctxB.clearRect(0, 0, W, H);
     ctxF.clearRect(0, 0, W, H);
 
@@ -725,14 +770,28 @@ function initButterflies() {
         b.angle += da * .06;
       }
 
-      // All butterflies behind cards
       drawB(ctxB, b);
     });
 
-    requestAnimationFrame(tick);
+    bfRaf = requestAnimationFrame(tick);
   }
 
-  tick();
+  function bfStart() {
+    if (!bfRaf && bfSectionVisible && !document.hidden) {
+      bfRaf = requestAnimationFrame(tick);
+    }
+  }
+
+  // Pause when tab is hidden
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) bfStart();
+  });
+
+  // Pause when services section is off-screen
+  new IntersectionObserver(entries => {
+    bfSectionVisible = entries[0].isIntersecting;
+    if (bfSectionVisible) bfStart();
+  }, { threshold: 0 }).observe(section);
 }
 
 /* ═══════════════════════════════
@@ -831,80 +890,8 @@ function initAgent() {
     safariRaf = requestAnimationFrame(safariRender);
   }
 
-  // ── Config (replace DEEPSEEK_URL with /api/chat when backend deployed) ──
-  const DEEPSEEK_URL  = 'https://api.deepseek.com/chat/completions';
-  const DEEPSEEK_KEY  = 'sk-9ec11288819f445ca7742a2cefd39752';
-  const SYSTEM_PROMPT = `Ты — AI-ассистент Алиса клининговой компании PrimeClean (Беларусь).
-Помогаешь клиентам определить нужную услугу, объём работ и стоимость. Все цены только в белорусских рублях (BYN).
-Отвечай кратко (2-4 предложения), тепло и дружелюбно, на русском языке. Без длинных списков.
-Если клиент готов оставить заявку — мягко попроси имя и номер телефона.
-
-## Услуги и тарифы (BYN/м²)
-— Стандартная уборка квартиры/дома: 2 BYN/м² (минимум от 80 BYN)
-— Генеральная уборка: 6 BYN/м² (минимум от 240 BYN)
-— Уборка после ремонта: 9 BYN/м² (минимум от 360 BYN)
-— Клининг офисов: 1.8 BYN/м² (минимум от 180 BYN)
-— Уборка домов: от 180 BYN
-— Химчистка мебели/ковров: от 18 BYN/м²
-— Специализированная уборка: индивидуально
-Время уборки: 2–4 часа. Площадь: от 20 до 300 м².
-
-## Калькулятор — дополнительные услуги (цена × количество)
-Если клиент спрашивает цену — считай сам: базовая цена (тариф × площадь) + сумма доп. услуг.
-Каждая доп. услуга умножается на количество единиц, которое указывает клиент:
-— Мойка окон: 15 BYN × кол-во створок (не окон — каждая створка считается отдельно)
-— Балкон / лоджия: 30 BYN × кол-во балконов
-— Кухонный шкафчик: 3 BYN × кол-во шкафчиков
-— Шкаф (гардероб): 10 BYN × кол-во шкафов
-— Вытяжка: 15 BYN × кол-во вытяжек
-— Холодильник изнутри: 23 BYN × кол-во холодильников
-— Духовка: 25 BYN × кол-во духовок
-— Микроволновка: 20 BYN × кол-во микроволновок
-— Глажка белья: 27 BYN × кол-во часов
-Если клиент не уточнил количество — спроси, прежде чем считать итог.
-Пример: стандартная уборка 50 м² (100 BYN) + 3 окна (45 BYN) + 1 холодильник (23 BYN) = итого 168 BYN.
-
-## Проверка реалистичности данных
-Если цифры клиента физически невозможны для указанной площади — мягко уточни, не принимая их за истину.
-Ориентиры для квартир (нормы для Беларуси):
-— Створки окон: в среднем 1 створка на каждые 5–7 м². Квартира 80 м² → реалистично 12–16 створок, максимум ~20. 100 створок в 80 м² — невозможно.
-— Балконы: стандартная квартира имеет 1–2 балкона, редко 3. Больше 3 — уточни.
-— Кухонные шкафчики: стандартная кухня 8–12 м² → обычно 6–12 шкафчиков. Больше 20 в квартире — странно, уточни.
-— Шкафы (гардеробы): обычно 1–2 на квартиру, редко 4+.
-— Холодильники/духовки/вытяжки: как правило 1 штука, максимум 2. Больше — уточни.
-Если данные явно не сходятся — скажи об этом дружелюбно: "Уточните, пожалуйста — для квартиры в 80 м² 100 створок окон кажется многовато, возможно вы имели в виду...?"
-Не блокируй расчёт, если клиент подтверждает цифры повторно — принимай как есть.
-
-## Преимущества
-— Гарантия качества: бесплатное исправление в течение 24 часов
-— Без предоплаты — оплата после приёмки работы
-— Экологичная сертифицированная химия
-— Проверенная команда 30+ специалистов
-— Ответ на заявку в течение 15 минут в рабочее время
-
-## О компании
-Работаем с 2019 года. Выполнено 350+ уборок, рейтинг 4.9/5 (127 отзывов).
-
-## Контакты
-— Телефон / Viber / WhatsApp: +375 (44) 478-93-60
-— Email: info@primeclean.by
-— Telegram: t.me/primeclean_bybot
-— Instagram: @primeclean_by
-— Режим работы: Пн–Пт 08:00–20:00, Сб–Вс 09:00–18:00
-
-## Заполнение формы заявки
-Маркер [FORM:...] добавляй ТОЛЬКО когда выполнены ВСЕ условия:
-1. Услуга полностью определена
-2. Клиент подтвердил площадь помещения
-3. Все доп. услуги (окна по створкам, балконы, шкафы и т.д.) уточнены и посчитаны — или клиент явно сказал что доп. услуг нет
-4. Итоговая цена названа и клиент её принял
-5. Клиент явно выразил готовность оформить заявку ("да", "оформляем", "записывайте", "хочу заказать" и т.п.)
-6. Клиент назвал имя И номер телефона
-
-Только после всех 6 пунктов добавь в конец ответа:
-[FORM:ИМЯ|ТЕЛЕФОН|УСЛУГА|КОММЕНТАРИЙ]
-КОММЕНТАРИЙ — краткая выжимка: услуга, площадь, доп. услуги, итоговая сумма. Пример: [FORM:Иван|+375291234567|Генеральная уборка|Генеральная уборка 65 м² + 4 створки окон. Итого 450 BYN.]
-Если хотя бы один пункт не выполнен — продолжай уточнять детали. Маркер невидим для клиента — не упоминай его.`;
+  // ── API: all AI requests go through backend (API key stays server-side) ──
+  const CHAT_URL = API_URL + '/api/chat';
 
   let state           = 'idle';
   let greeted         = false;
@@ -1193,18 +1180,14 @@ function initAgent() {
     messages.scrollTop = messages.scrollHeight;
 
     try {
-      const res  = await fetch(DEEPSEEK_URL, {
+      const res  = await fetch(CHAT_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${DEEPSEEK_KEY}` },
-        body: JSON.stringify({
-          model: 'deepseek-chat',
-          messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...history],
-          max_tokens: 200,
-          temperature: 0.7,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: history }),
       });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
       const data   = await res.json();
-      const raw    = data.choices?.[0]?.message?.content || 'Не смогла ответить — попробуйте ещё раз.';
+      const raw    = data.reply || 'Не смогла ответить — попробуйте ещё раз.';
       const parsed = extractFormMarker(raw);
       const reply  = parsed ? parsed.clean : raw;
       history.push({ role: 'assistant', content: reply });
@@ -1470,19 +1453,35 @@ function initForm() {
   // ── Form submit ──
   const form = document.getElementById('contact-form');
   if (!form) return;
-  form.addEventListener('submit', e => {
+  form.addEventListener('submit', async e => {
     e.preventDefault();
     playLidSound();
     const btn = document.getElementById('form-btn');
     btn.classList.add('sent');
     btn.querySelector('span').textContent = 'Отправляем…';
     btn.disabled = true;
-    setTimeout(() => {
-      showSuccess();
-      btn.classList.remove('sent');
-      btn.querySelector('span').textContent = 'Отправить заявку';
-      btn.disabled = false;
-      form.reset();
-    }, 600);
+
+    const name    = form.querySelector('input[type="text"]')?.value?.trim() || '';
+    const phone   = document.getElementById('phone-input')?.value?.trim() || '';
+    const service = form.querySelector('select')?.value || '';
+    const message = form.querySelector('textarea')?.value?.trim() || '';
+
+    try {
+      const leadsUrl = API_URL + '/api/leads';
+      const res = await fetch(leadsUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, phone, service, message, source: 'website-form' }),
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+    } catch (err) {
+      console.warn('[form] backend unavailable, showing success anyway:', err.message);
+    }
+
+    showSuccess();
+    btn.classList.remove('sent');
+    btn.querySelector('span').textContent = 'Отправить заявку';
+    btn.disabled = false;
+    form.reset();
   });
 }

@@ -1076,6 +1076,28 @@ body.no-canvas #fx-canvas { display: none; }
   .c4-stat { flex: 1 1 calc(50% - 10px); min-width: 0; }
 }
 
+/* ── 320px — smallest phones ── */
+@media (max-width: 360px) {
+  #hdr { padding: 0 14px; height: 54px; }
+  .hdr-logo span { font-size: 1rem; }
+  .hdr-cta { padding: 7px 12px; font-size: 0.75rem; }
+
+  .chap-inner { padding: 0 14px; padding-top: 54px; }
+  .c0-title { font-size: clamp(2rem, 18vw, 3.5rem); }
+
+  .srv-wrap { padding: 0 14px; }
+  .srv-section { padding: 60px 0 80px; }
+
+  .contact-section { padding: 56px 0; }
+  .contact-wrap { padding: 0 14px; }
+  #contact-form { padding: 20px 16px; }
+
+  .footer { padding: 14px 16px; }
+
+  .agent-character { width: 80px; height: 120px; }
+  .agent-chat { width: calc(100vw - 100px); min-width: 160px; }
+}
+
 /* Scroll-driven parallax (Chrome 115+) */
 @supports (animation-timeline: scroll()) {
   #scroll-exp {
@@ -1227,9 +1249,20 @@ body.no-canvas #fx-canvas { display: none; }
 
 /* Reduce motion */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.1ms !important; }
-  .c0-logo, .c0-title, .c0-sub { animation: none; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.1ms !important;
+  }
+  .c0-logo, .c0-title, .c0-sub,
+  .c0-scroll-hint, .scroll-wheel::before,
+  .agent-online i, #pl-sound { animation: none !important; }
 }
+
+/* Low-perf mode: disable expensive effects */
+body[data-perf="low"] .chap-tags span { backdrop-filter: none; }
+body[data-perf="low"] .c4-stat        { backdrop-filter: none; }
+body[data-perf="low"] #pl-sound       { backdrop-filter: none; }
 
 /* ═══════════════════════════════════════════
    AI AGENT WIDGET
