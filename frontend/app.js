@@ -974,7 +974,6 @@ function initAgent() {
   }
 
   function openChat() {
-    if (state === 'greeting') return; // уже играет приветствие — ждём конца аудио
     hideGreetBubble();
     hint.classList.remove('visible');
     clearTimeout(hintTimer);
@@ -984,24 +983,9 @@ function initAgent() {
       greeted = true;
       setState('greeting');
       voice.currentTime = 0;
-
-      let fallbackTimer;
-      const onVoiceEnd = () => {
-        voice.removeEventListener('ended', onVoiceEnd);
-        clearTimeout(fallbackTimer);
-        revealChat();
-      };
-
-      // fallback — если аудио не загрузилось или длиннее анимации
-      fallbackTimer = setTimeout(onVoiceEnd, 9000);
-
-      voice.addEventListener('ended', onVoiceEnd);
-      voice.play().catch(() => {
-        // браузер заблокировал аудио — показываем чат сразу
-        voice.removeEventListener('ended', onVoiceEnd);
-        clearTimeout(fallbackTimer);
-        revealChat();
-      });
+      voice.play().catch(() => {});
+      // Краткая анимация приветствия (1.5s), потом открываем чат
+      setTimeout(revealChat, 1500);
     } else {
       chat.classList.add('is-open');
       widget.classList.add('chat-open');
