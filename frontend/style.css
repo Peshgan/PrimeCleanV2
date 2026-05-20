@@ -28,6 +28,10 @@ img { display: block; max-width: 100%; }
 a { text-decoration: none; color: inherit; }
 button { cursor: pointer; border: none; background: none; font-family: inherit; }
 input, select, textarea { font-family: inherit; }
+/* Disable double-tap zoom on all interactive elements */
+a, button, [role="button"], input, select, textarea, label {
+  touch-action: manipulation;
+}
 
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: var(--dark); }
@@ -211,7 +215,8 @@ input, select, textarea { font-family: inherit; }
 #scroll-sticky {
   position: sticky;
   top: 0;
-  height: 100svh;
+  height: 100vh;   /* fallback: iOS < 15.4, older Android */
+  height: 100svh;  /* small viewport height — excludes browser chrome */
   overflow: hidden;
 }
 
@@ -1030,6 +1035,14 @@ body.no-canvas #fx-canvas { display: none; }
    RESPONSIVE
 ══════════════════════════════════════════ */
 @media (max-width: 768px) {
+  /* iOS Safari: font-size < 16px triggers viewport zoom on input focus */
+  .f-group input,
+  .f-group select,
+  .f-group textarea,
+  #agent-input {
+    font-size: 16px !important;
+  }
+
   #hdr { padding: 0 20px; height: 60px; }
   .hdr-logo img { width: 30px; height: 30px; }
   .hdr-logo span { font-size: 1.1rem; }
@@ -1600,6 +1613,7 @@ body[data-perf="low"] #pl-sound       { backdrop-filter: none; }
   flex: 1;
   min-height: 0;        /* критично — без этого flex-item не сжимается и налезает на инпут */
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* momentum scrolling on iOS */
   padding: 16px;
   padding-bottom: 8px;
   display: flex;
@@ -2082,3 +2096,18 @@ body[data-perf="low"] #pl-sound       { backdrop-filter: none; }
 .srv-card { contain: layout style; }
 .chap     { contain: layout; }
 .agent-msg { contain: content; }
+
+/* ── Landscape on mobile: shrink agent to not eat half the screen ── */
+@media (max-height: 500px) and (max-width: 900px) {
+  .agent-character { width: 90px; height: 135px; }
+  .agent-chat { max-height: 85vh; }
+  .agent-messages { max-height: calc(85vh - 130px); }
+  .agent-greet-bubble { display: none; }
+}
+
+/* ── Agent hidden when keyboard is open (JS adds .keyboard-open to body) ── */
+body.keyboard-open .agent-widget {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(20px);
+}

@@ -44,6 +44,8 @@ WebM с прозрачностью не работает в Safari. Исполь
 - верхняя половина = RGB цвет, нижняя = grayscale альфа-маска
 - Canvas пиксельный рендерер читает обе половины
 - Порог альфа: `ad[i] < 48 ? 0 : ad[i]` (артефакты H.264 < 48/255)
+- Файлы имеют суффикс `_ios` в имени: `soon_combined_ios.mp4`, `helo_combined_ios.mp4`, `povest_combined_ios.mp4`
+- Определение Safari: `isIOS || isSafari` → переключается на canvas renderer
 
 ### 4. Performance tiers
 `detectPerf()` возвращает 'low' | 'medium' | 'high':
@@ -85,6 +87,14 @@ npx serve -s frontend -p 3000
 - [x] Lite mode CSS ([data-perf="low/medium"])
 - [x] prefers-reduced-motion support
 - [x] Vite build pipeline (compression + legacy browsers)
+- [x] Полный мобильный аудит (16 фиксов — см. BUGFIX_REPORT.md)
+- [x] iOS Safari фиксы (zoom, 100svh, momentum scroll — см. SAFARI_FIXES.md)
+- [x] Адаптивные частицы (40/60/130 по PERF tieru)
+- [x] Butterfly blur gate (только PERF=high)
+- [x] Lazy WebM load (preload="none" + readyState===0)
+- [x] Keyboard-open agent hide (body.keyboard-open CSS)
+- [x] Error logging → sessionStorage['pc_errors']
+- [x] iOS dual-plane MP4 переименованы с суффиксом _ios
 
 ## Что нужно сделать
 - [ ] Заполнить Railway env: DEEPSEEK_API_KEY, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
@@ -99,6 +109,10 @@ npx serve -s frontend -p 3000
 - Safari чёрный фон агента — H.264 артефакты, порог 48 (исправлено)
 - `hideGreetBubble is not defined` ReferenceError (исправлено)
 - agent-character не кликался — из-за ReferenceError выше (исправлено)
+- iOS viewport zoom на input focus — font-size < 16px триггерил зум (исправлено 2026-05-20)
+- Форма — все поля не имели `name` атрибута — данные не доходили до backend (исправлено 2026-05-20)
+- Agent WebM грузился eagerly (10MB) — добавлен `preload="none"` (исправлено 2026-05-20)
+- `!v.src` check ненадёжен для `<source>` элементов — заменён на `v.readyState === 0` (исправлено)
 
 ## Медиа-файлы: что используется
 | Файл | Используется | Размер |
@@ -109,7 +123,7 @@ npx serve -s frontend -p 3000
 | motion/image/*.webp | ДА (butterflies JS) | 580–770KB |
 | motion/image/*.png | НЕТ (orphans, кроме ai_agent/) | 1.9–14MB |
 | motion/ai_agent/*.webm | ДА (Chrome/FF) | 2.5–7.5MB |
-| motion/ai_agent/*_combined.mp4 | ДА (Safari) | 128–236KB |
+| motion/ai_agent/*_combined_ios.mp4 | ДА (Safari dual-plane) | 128–236KB |
 
 ## Backend API
 - `POST /api/chat` — DeepSeek AI, тело: `{ messages: [...] }`
@@ -127,3 +141,16 @@ higgsfield generate create gpt_image_2 --prompt "..." --aspect_ratio "4:3" --wai
 - Frontend: Vercel (автодеплой из master)
 - Backend: Railway (автодеплой из master, папка backend/)
 - Команда сборки: `npm run build` (Vite, из папки frontend/)
+- **Railway**: нужно вручную задать Root Directory = `backend` в Railway Dashboard → Service Settings → Source
+- **Railway env vars**: DEEPSEEK_API_KEY, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID — задать вручную в dashboard
+
+## Мобильный аудит — ключевые правила (2026-05-20)
+- iOS viewport zoom: `maximum-scale=1.0, user-scalable=no` в viewport meta + `font-size: 16px` на всех inputs при ≤768px
+- iOS momentum scroll: `-webkit-overflow-scrolling: touch` на `.agent-messages`
+- iOS 100svh: всегда добавлять `height: 100vh` fallback перед `height: 100svh`
+- 300ms Android tap delay: `touch-action: manipulation` на всех интерактивных элементах
+- Agent + keyboard: `body.keyboard-open` CSS класс скрывает виджет через focusin/focusout
+- WebM lazy load: `preload="none"` в HTML + `v.readyState === 0` в JS перед `v.load()`
+- PARTICLE_COUNT адаптивен: 40 (low) / 60 (medium) / 130 (high)
+- Canvas blur `ctx.filter='blur(8px)'` — только если `PERF === 'high'`
+- Ошибки JS: `sessionStorage['pc_errors']` — читать в DevTools: `JSON.parse(sessionStorage.getItem('pc_errors'))`

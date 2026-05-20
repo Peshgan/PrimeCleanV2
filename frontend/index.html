@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="description" content="PrimeClean — профессиональный клининг в Беларуси. Уборка квартир, офисов, после ремонта. Без предоплаты. Звонок за 15 минут. +375 (44) 478-93-60">
   <meta name="theme-color" content="#06080f">
   <meta property="og:title" content="PrimeClean — Клининг в Беларуси">
@@ -102,7 +102,7 @@
       <div id="scroll-sticky">
 
         <!-- VIDEO (scroll-driven) — metadata only, loaded on demand -->
-        <video id="sv" muted preload="metadata" playsinline>
+        <video id="sv" muted preload="metadata" playsinline poster="motion/image/start_site.jpg">
           <source src="motion/video/Backgroundscrollanimation.mp4" type="video/mp4">
         </video>
 
@@ -404,17 +404,17 @@
         <form id="contact-form" novalidate>
           <div class="f-row">
             <div class="f-group">
-              <label>Имя</label>
-              <input type="text" placeholder="Иван Иванов" required>
+              <label for="name-input">Имя</label>
+              <input type="text" id="name-input" name="name" placeholder="Иван Иванов" required autocomplete="name">
             </div>
             <div class="f-group">
-              <label>Телефон</label>
-              <input type="tel" id="phone-input" placeholder="+375 (XX) XXX-XX-XX" required>
+              <label for="phone-input">Телефон</label>
+              <input type="tel" id="phone-input" name="phone" placeholder="+375 (XX) XXX-XX-XX" required autocomplete="tel" inputmode="tel">
             </div>
           </div>
           <div class="f-group">
             <label for="service-select">Услуга</label>
-            <select id="service-select">
+            <select id="service-select" name="service" autocomplete="off">
               <option value="">Выберите услугу</option>
               <option>Уборка жилых помещений</option>
               <option>Генеральная уборка</option>
@@ -426,8 +426,8 @@
             </select>
           </div>
           <div class="f-group">
-            <label>Комментарий</label>
-            <textarea rows="3" placeholder="Расскажите подробнее — площадь, пожелания..."></textarea>
+            <label for="comment-input">Комментарий</label>
+            <textarea id="comment-input" name="message" rows="3" placeholder="Расскажите подробнее — площадь, пожелания..." autocomplete="off"></textarea>
           </div>
           <button type="submit" id="form-btn">
             <span>Отправить заявку</span>
@@ -527,16 +527,16 @@
           <span class="agent-intro-role">AI-ассистент PrimeClean</span>
         </div>
         <div class="agent-videos">
-          <!-- Idle -->
-          <video class="agent-state is-active" id="agent-s-idle" playsinline muted loop>
+          <!-- Idle: loads eagerly — visible immediately -->
+          <video class="agent-state is-active" id="agent-s-idle" playsinline muted loop preload="metadata">
             <source src="motion/ai_agent/soon_animation_no_background.webm" type="video/webm">
           </video>
-          <!-- Greeting -->
-          <video class="agent-state" id="agent-s-greet" playsinline muted loop>
+          <!-- Greeting: lazy — loaded only on first open (ensureWebmLoaded) -->
+          <video class="agent-state" id="agent-s-greet" playsinline muted loop preload="none">
             <source src="motion/ai_agent/helo_animation_7second_no_background.webm" type="video/webm">
           </video>
-          <!-- Talking -->
-          <video class="agent-state" id="agent-s-talk"  playsinline muted loop>
+          <!-- Talking: lazy — loaded only on first open (ensureWebmLoaded) -->
+          <video class="agent-state" id="agent-s-talk" playsinline muted loop preload="none">
             <source src="motion/ai_agent/ai_agent_povest_no_background.webm" type="video/webm">
           </video>
         </div>

@@ -6,6 +6,20 @@
 ═══════════════════════════════════════════════════ */
 'use strict';
 
+// ─── Minimal error logging (stores last 20 errors in sessionStorage) ─────────
+window.addEventListener('error', e => {
+  const entry = `[${new Date().toISOString()}] ${e.message} @ ${e.filename}:${e.lineno}`;
+  try {
+    const log = JSON.parse(sessionStorage.getItem('pc_errors') || '[]');
+    log.push(entry);
+    sessionStorage.setItem('pc_errors', JSON.stringify(log.slice(-20)));
+  } catch {}
+  console.warn('[PrimeClean Error]', e.message);
+});
+window.addEventListener('unhandledrejection', e => {
+  console.warn('[PrimeClean] Unhandled promise:', e.reason);
+});
+
 // ─── Backend API URL ──────────────────────────────────────────────────────────
 // window.PC_API is set in index.html <script> tag.
 // '' = same origin (Vercel co-host). Set to Railway URL for separate backend.
@@ -99,7 +113,7 @@ function initSite() {
 
   initScrollExp(PERF);
   initNav();
-  initForm();
+  initForm(PERF);
   initCardTilt();
   initServicesReveal();
   if (PERF !== 'low') initButterflies(PERF);
@@ -684,12 +698,14 @@ function initButterflies(PERF) {
       ctx.scale(flapX, 1);
       ctx.drawImage(img, -s / 2, -s / 2, s, s);
 
-      // Subtle glow halo
-      ctx.globalCompositeOperation = 'screen';
-      ctx.globalAlpha = b.alpha * .18 * flapX;
-      ctx.filter = 'blur(8px)';
-      ctx.drawImage(img, -s * .6, -s * .6, s * 1.2, s * 1.2);
-      ctx.filter = 'none';
+      // Subtle glow halo — skip on non-high devices (ctx.filter is expensive on mobile GPU)
+      if (PERF === 'high') {
+        ctx.globalCompositeOperation = 'screen';
+        ctx.globalAlpha = b.alpha * .18 * flapX;
+        ctx.filter = 'blur(8px)';
+        ctx.drawImage(img, -s * .6, -s * .6, s * 1.2, s * 1.2);
+        ctx.filter = 'none';
+      }
 
     } else {
       // ── Fallback: procedural bezier wings ──
@@ -870,9 +886,9 @@ function initAgent() {
     };
 
     safariVideos = {
-      idle:     makeSV('motion/ai_agent/soon_combined.mp4',   true),
-      greeting: makeSV('motion/ai_agent/helo_combined.mp4',   false),
-      talking:  makeSV('motion/ai_agent/povest_combined.mp4', true),
+      idle:     makeSV('motion/ai_agent/soon_combined_ios.mp4',   true),
+      greeting: makeSV('motion/ai_agent/helo_combined_ios.mp4',   false),
+      talking:  makeSV('motion/ai_agent/povest_combined_ios.mp4', true),
     };
 
     // Разблокировка видео на iOS (требует жест пользователя)
@@ -928,15 +944,13 @@ function initAgent() {
   let idlePulseTimer  = null;
   // Greet bubble убран — текст вошёл в очередь хинтов как первый показ
 
-  // ── Lazy-load greeting/talking WebM (idle loads immediately, rest only on first open) ──
+  // ── Lazy-load greeting/talking WebM (preload="none" in HTML, triggered here) ──
   let webmLoaded = false;
   function ensureWebmLoaded() {
     if (webmLoaded || needsWebmFallback) return;
     webmLoaded = true;
     [sGreet, sTalk].forEach(v => {
-      if (!v.src && v.querySelector('source')) {
-        v.load();
-      }
+      if (v && v.readyState === 0) v.load(); // HAVE_NOTHING → trigger fetch
     });
   }
 
@@ -1122,6 +1136,24 @@ function initAgent() {
   character.addEventListener('touchend', e => { e.preventDefault(); openChat(); }, { passive: false });
   character.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') openChat(); });
   closeBtn.addEventListener('click', closeChat);
+
+  // ── Hide agent when mobile keyboard opens (prevents blocking form inputs) ──
+  if ('ontouchstart' in window) {
+    document.addEventListener('focusin', e => {
+      if (e.target !== input && e.target.matches('input, textarea, select')) {
+        document.body.classList.add('keyboard-open');
+      }
+    });
+    document.addEventListener('focusout', e => {
+      if (e.target !== input && e.target.matches('input, textarea, select')) {
+        setTimeout(() => {
+          if (!document.activeElement?.matches('input, textarea, select')) {
+            document.body.classList.remove('keyboard-open');
+          }
+        }, 200);
+      }
+    });
+  }
 
   // ── Messages ──
   function addMessage(role, text) {
@@ -1366,7 +1398,7 @@ function initSoundFX() {
 /* ═══════════════════════════════
    9. FORM
 ═══════════════════════════════ */
-function initForm() {
+function initForm(PERF = 'high') {
   // ── Белорусская маска телефона: +375 (XX) XXX-XX-XX ──
   const phoneInput = document.getElementById('phone-input');
   if (phoneInput) {
@@ -1418,7 +1450,8 @@ function initForm() {
     const cy  = canvas.height / 2;
     const COLORS = ['#00eaff','#1a6cff','#ffffff','#7dd3fc','#60a5fa','#00eaff','#00eaff'];
 
-    const particles = Array.from({ length: 130 }, () => {
+    const PARTICLE_COUNT = PERF === 'low' ? 40 : PERF === 'medium' ? 60 : 130;
+    const particles = Array.from({ length: PARTICLE_COUNT }, () => {
       const angle = Math.random() * Math.PI * 2;
       const speed = Math.random() * 11 + 4;
       return {
