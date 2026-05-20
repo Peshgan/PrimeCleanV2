@@ -16,7 +16,10 @@
 
 /* ── RESET ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 16px; }
+html {
+  font-size: 16px;
+  overflow-x: hidden; /* iOS Safari: body overflow-x:hidden недостаточно */
+}
 body {
   font-family: 'Inter', system-ui, sans-serif;
   background: var(--dark);
@@ -2096,14 +2099,14 @@ body[data-perf="low"] #pl-sound       { backdrop-filter: none; }
 [data-perf="medium"] .chap-tags span { backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
 
 /* ── will-change + GPU compositing ── */
-.chap { will-change: opacity, transform; transform: translateZ(0); }
+.chap { will-change: opacity, transform; } /* translateZ убран — JS-параллакс перезапишет transform */
 .hdr-cta { will-change: transform; }
 .c4-cta  { will-change: transform, box-shadow; }
 .srv-card { will-change: transform, opacity; }
 .agent-chat { will-change: opacity, transform; }
 .agent-character { will-change: transform; transform: translateZ(0); }
 #ring-fill { will-change: stroke-dashoffset; }
-#fx-canvas { transform: translateZ(0); will-change: contents; }
+#fx-canvas { transform: translateZ(0); will-change: transform; }
 #agent-canvas { transform: translateZ(0); }
 
 /* ── contain: ускоряем layout recalc ── */
