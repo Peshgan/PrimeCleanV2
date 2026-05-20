@@ -40,6 +40,8 @@ const IS_MOBILE = window.innerWidth <= 768;
 
   let soundUnlocked = false;
 
+  document.body.style.overflow = 'hidden';
+
   if (IS_MOBILE) {
     plVideo.querySelector('source').src = 'motion/video/start_mobile.mp4';
     plVideo.load();
@@ -69,6 +71,7 @@ const IS_MOBILE = window.innerWidth <= 768;
   });
 
   function exitPreloader() {
+    document.body.style.overflow = '';
     pl.classList.add('exit');
     pl.addEventListener('animationend', () => { pl.style.display = 'none'; }, { once: true });
     site.classList.remove('off');
