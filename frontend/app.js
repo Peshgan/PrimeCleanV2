@@ -1011,10 +1011,16 @@ function initAgent() {
       greeted = true;
       setState('greeting');
       voice.currentTime = 0;
-      voice.play().catch(() => {});
-      // Открываем чат когда заканчивается голос; fallback 12s если аудио не воспроизведётся
-      const fallback = setTimeout(revealChat, 12000);
-      voice.addEventListener('ended', () => { clearTimeout(fallback); revealChat(); }, { once: true });
+
+      let revealed = false;
+      function doReveal() { if (!revealed) { revealed = true; revealChat(); } }
+
+      // Fallback: чат откроется максимум через 10s в любом случае
+      const fallback = setTimeout(doReveal, 10000);
+      // Нормальный путь: чат открывается когда голос заканчивается
+      voice.addEventListener('ended', () => { clearTimeout(fallback); doReveal(); }, { once: true });
+      // Если аудио заблокировано или не загрузилось — открываем через 1.5s
+      voice.play().catch(() => { clearTimeout(fallback); setTimeout(doReveal, 1500); });
     } else {
       chat.classList.add('is-open');
       widget.classList.add('chat-open');
