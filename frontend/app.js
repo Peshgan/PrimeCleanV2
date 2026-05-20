@@ -908,6 +908,17 @@ function initAgent() {
     const isIOSDevice = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
     const isSafariBrowser = /^((?!chrome|android).)*safari/i.test(ua);
     if (isIOSDevice || isSafariBrowser) {
+      // Подменяем источники на iOS-специфичные MP4
+      const iosSrc = {
+        [sIdle.id]:  'motion/ai_agent/ios_soon_animation_no_background.mp4',
+        [sGreet.id]: 'motion/ai_agent/ios_helo_animation_7second_no_background.mp4',
+        [sTalk.id]:  'motion/ai_agent/ios_ai_agent_povest_no_background.mp4',
+      };
+      [sIdle, sGreet, sTalk].forEach(v => {
+        v.innerHTML = `<source src="${iosSrc[v.id]}" type="video/mp4">`;
+        if (v.id === sIdle.id) v.load();
+      });
+
       const agentVideos = character.querySelector('.agent-videos');
       const cvs = document.createElement('canvas');
       cvs.id = 'agent-canvas';
