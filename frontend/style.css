@@ -1342,6 +1342,7 @@ body[data-perf="low"] #pl-sound       { backdrop-filter: none; }
   transform: translateY(30px);
   pointer-events: none !important;
 }
+.agent-widget.agent-hidden * { pointer-events: none !important; }
 .agent-widget > * { pointer-events: all; }
 
 /* ── Character ── */
