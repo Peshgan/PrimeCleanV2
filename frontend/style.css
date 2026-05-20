@@ -2144,7 +2144,7 @@ body[data-perf="low"] #pl-sound       { backdrop-filter: none; }
 .c4-cta  { will-change: transform, box-shadow; }
 .srv-card { will-change: transform, opacity; }
 .agent-chat { will-change: opacity, transform; }
-.agent-character { will-change: transform; transform: translateZ(0); }
+.agent-character { will-change: transform; }
 #ring-fill { will-change: stroke-dashoffset; }
 #fx-canvas { transform: translateZ(0); will-change: transform; }
 #agent-canvas { transform: translateZ(0); }
