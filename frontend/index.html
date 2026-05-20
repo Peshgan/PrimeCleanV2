@@ -506,6 +506,15 @@
     </footer>
 
     <!-- ══════ AI AGENT WIDGET ══════ -->
+    <!-- Кнопка-аватар (видна когда виджет свёрнут пользователем) -->
+    <button id="agent-avatar-btn" class="agent-avatar-btn" aria-label="Открыть чат с Алисой" hidden>
+      <picture>
+        <source srcset="motion/ai_agent/agent_no_booble_no_background.webp" type="image/webp">
+        <img src="motion/ai_agent/agent_no_booble_no_background.png" alt="Алиса" width="56" height="56" decoding="async">
+      </picture>
+      <span class="agent-avatar-btn-dot"></span>
+    </button>
+
     <div id="ai-agent" class="agent-widget">
 
       <!-- Chat panel -->
@@ -551,6 +560,11 @@
 
       <!-- Character -->
       <div class="agent-character" id="agent-character" role="button" aria-label="Открыть AI-ассистента" tabindex="0">
+        <button class="agent-minimize-btn" id="agent-minimize-btn" aria-label="Свернуть" title="Свернуть">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+            <path d="M2 5h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </button>
         <div class="agent-greet-bubble" id="agent-greet-bubble">
           <strong>Привет! 👋</strong>
           <span>Помогу подобрать уборку и цену</span>

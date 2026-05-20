@@ -1379,6 +1379,72 @@ body[data-perf="low"] #pl-sound       { backdrop-filter: none; }
 .agent-widget.agent-hidden * { pointer-events: none !important; }
 .agent-widget > * { pointer-events: all; }
 
+/* ── Minimize button (top-left of character) ── */
+.agent-minimize-btn {
+  position: absolute;
+  top: 8px; left: 8px;
+  z-index: 10;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: rgba(6,8,15,.75);
+  border: 1px solid rgba(255,255,255,.18);
+  color: rgba(255,255,255,.6);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0;
+  transition: opacity .25s ease, background .2s ease, color .2s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  pointer-events: none;
+}
+.agent-character:hover .agent-minimize-btn,
+.agent-character:focus-within .agent-minimize-btn { opacity: 1; pointer-events: all; }
+.agent-minimize-btn:hover { background: rgba(255,255,255,.15); color: #fff; }
+.agent-minimize-btn:active { transform: scale(.92); }
+
+/* On mobile — always show minimize btn */
+@media (max-width: 768px) {
+  .agent-minimize-btn { opacity: 0.7; pointer-events: all; }
+}
+
+/* ── Avatar button (shown when widget minimized by user) ── */
+.agent-avatar-btn {
+  position: fixed;
+  bottom: max(28px, calc(env(safe-area-inset-bottom, 0px) + 16px));
+  right: max(24px, calc(env(safe-area-inset-right, 0px) + 24px));
+  z-index: 9001;
+  width: 58px; height: 58px;
+  border-radius: 50%;
+  background: rgba(6,8,15,.9);
+  border: 2px solid rgba(0,234,255,.45);
+  box-shadow: 0 4px 24px rgba(0,0,0,.6), 0 0 0 1px rgba(0,234,255,.15);
+  overflow: hidden;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  padding: 0;
+  animation: avatar-btn-in .35s cubic-bezier(.34,1.56,.64,1) both;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.agent-avatar-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 32px rgba(0,0,0,.7), 0 0 0 2px rgba(0,234,255,.4);
+}
+.agent-avatar-btn:active { transform: scale(.95); }
+.agent-avatar-btn img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.agent-avatar-btn-dot {
+  position: absolute;
+  bottom: 3px; right: 3px;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: #00eaff;
+  border: 2px solid rgba(6,8,15,.9);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes avatar-btn-in {
+  from { opacity: 0; transform: scale(.6); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
 /* ── Character ── */
 .agent-character {
   position: relative;

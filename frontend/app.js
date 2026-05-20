@@ -847,21 +847,44 @@ function initButterflies(PERF) {
    12. AI AGENT WIDGET
 ═══════════════════════════════ */
 function initAgent() {
-  const widget    = document.getElementById('ai-agent');
-  const character = document.getElementById('agent-character');
-  const chat      = document.getElementById('agent-chat');
-  const closeBtn  = document.getElementById('agent-chat-close');
-  const messages  = document.getElementById('agent-messages');
-  const typing    = document.getElementById('agent-typing');
-  const input     = document.getElementById('agent-input');
-  const sendBtn   = document.getElementById('agent-send');
-  const hint      = document.getElementById('agent-hint');
-  const voice     = document.getElementById('agent-voice');
-  const sIdle     = document.getElementById('agent-s-idle');
-  const sGreet    = document.getElementById('agent-s-greet');
-  const sTalk     = document.getElementById('agent-s-talk');
+  const widget       = document.getElementById('ai-agent');
+  const character    = document.getElementById('agent-character');
+  const chat         = document.getElementById('agent-chat');
+  const closeBtn     = document.getElementById('agent-chat-close');
+  const messages     = document.getElementById('agent-messages');
+  const typing       = document.getElementById('agent-typing');
+  const input        = document.getElementById('agent-input');
+  const sendBtn      = document.getElementById('agent-send');
+  const hint         = document.getElementById('agent-hint');
+  const voice        = document.getElementById('agent-voice');
+  const sIdle        = document.getElementById('agent-s-idle');
+  const sGreet       = document.getElementById('agent-s-greet');
+  const sTalk        = document.getElementById('agent-s-talk');
+  const minimizeBtn  = document.getElementById('agent-minimize-btn');
+  const avatarBtn    = document.getElementById('agent-avatar-btn');
 
   if (!widget) return;
+
+  // ── Minimize / Expand ──
+  function minimizeAgent() {
+    widget.style.opacity = '0';
+    widget.style.transform = 'translateY(20px) scale(0.9)';
+    widget.style.pointerEvents = 'none';
+    setTimeout(() => { widget.hidden = true; }, 300);
+    if (avatarBtn) {
+      avatarBtn.hidden = false;
+      avatarBtn.style.display = '';
+    }
+  }
+  function expandAgent() {
+    if (avatarBtn) avatarBtn.hidden = true;
+    widget.hidden = false;
+    widget.style.opacity = '';
+    widget.style.transform = '';
+    widget.style.pointerEvents = '';
+  }
+  minimizeBtn?.addEventListener('click', e => { e.stopPropagation(); minimizeAgent(); });
+  avatarBtn?.addEventListener('click', expandAgent);
 
 
   // ── API: all AI requests go through backend (API key stays server-side) ──
