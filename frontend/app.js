@@ -1107,7 +1107,7 @@ function initAgent() {
   character.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') openChat(); });
   closeBtn.addEventListener('click', closeChat);
 
-  // ── Hide agent when mobile keyboard opens (prevents blocking form inputs) ──
+  // ── Hide agent when OTHER inputs get focus (not our own chat input) ──
   if ('ontouchstart' in window) {
     document.addEventListener('focusin', e => {
       if (e.target !== input && e.target.matches('input, textarea, select')) {
@@ -1123,6 +1123,19 @@ function initAgent() {
         }, 200);
       }
     });
+  }
+
+  // ── visualViewport: держим чат над клавиатурой на iOS ──
+  if ('visualViewport' in window) {
+    const vv = window.visualViewport;
+    function onViewport() {
+      const kbHeight = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      widget.style.bottom = kbHeight > 50
+        ? (kbHeight + 8) + 'px'
+        : '';
+    }
+    vv.addEventListener('resize', onViewport);
+    vv.addEventListener('scroll', onViewport);
   }
 
   // ── Messages ──
