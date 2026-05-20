@@ -24,6 +24,7 @@ window.addEventListener('unhandledrejection', e => {
 // window.PC_API is set in index.html <script> tag.
 // '' = same origin (Vercel co-host). Set to Railway URL for separate backend.
 const API_URL = (window.PC_API || '').replace(/\/$/, '');
+const IS_MOBILE = window.innerWidth <= 768;
 
 /* ═══════════════════════════════
    1. PRELOADER
@@ -38,6 +39,11 @@ const API_URL = (window.PC_API || '').replace(/\/$/, '');
   const site     = document.getElementById('site');
 
   let soundUnlocked = false;
+
+  if (IS_MOBILE) {
+    plVideo.querySelector('source').src = 'motion/video/start_mobile.mp4';
+    plVideo.load();
+  }
 
   // Try autoplay
   plVideo.play().catch(() => {});
@@ -244,6 +250,9 @@ function initScrollExp(PERF) {
     }
   }, { passive: true });
 
+  if (IS_MOBILE) {
+    sv.querySelector('source').src = 'motion/video/scroll_mobile.mp4';
+  }
   // Force video load on iOS (ignores preload="auto")
   sv.load();
   // iOS requires a play() call before seeking is possible
