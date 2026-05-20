@@ -885,6 +885,7 @@ function initAgent() {
     [sIdle, sGreet, sTalk].forEach(el => {
       el.classList.remove('is-active');
       el.pause?.();
+      el.currentTime = 0;
     });
 
     if (s === 'idle' || s === 'listening') {
@@ -1011,8 +1012,9 @@ function initAgent() {
       setState('greeting');
       voice.currentTime = 0;
       voice.play().catch(() => {});
-      // Краткая анимация приветствия (1.5s), потом открываем чат
-      setTimeout(revealChat, 1500);
+      // Открываем чат когда заканчивается голос; fallback 12s если аудио не воспроизведётся
+      const fallback = setTimeout(revealChat, 12000);
+      voice.addEventListener('ended', () => { clearTimeout(fallback); revealChat(); }, { once: true });
     } else {
       chat.classList.add('is-open');
       widget.classList.add('chat-open');
