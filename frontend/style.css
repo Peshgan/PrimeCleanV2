@@ -210,6 +210,7 @@ a, button, [role="button"], input, select, textarea, label {
   /* 600vh = room for scroll; chapters control video timing */
   height: 600vh;
   position: relative;
+  touch-action: pan-y; /* JS управляет анимацией — только вертикальный скролл */
 }
 
 #scroll-sticky {
@@ -218,6 +219,8 @@ a, button, [role="button"], input, select, textarea, label {
   height: 100vh;   /* fallback: iOS < 15.4, older Android */
   height: 100svh;  /* small viewport height — excludes browser chrome */
   overflow: hidden;
+  transform: translateZ(0); /* принудительный GPU-слой на iOS */
+  will-change: transform;
 }
 
 /* ── VIDEO ── */
@@ -228,6 +231,8 @@ a, button, [role="button"], input, select, textarea, label {
   height: 100%;
   object-fit: cover;
   z-index: 0;
+  transform: translateZ(0); /* GPU-слой для видео */
+  will-change: transform;
 }
 .sv-scrim {
   position: absolute;
@@ -2090,14 +2095,16 @@ body[data-perf="low"] #pl-sound       { backdrop-filter: none; }
 [data-perf="medium"] #fx-canvas { opacity: 0.6; }
 [data-perf="medium"] .chap-tags span { backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
 
-/* ── will-change: намекаем браузеру что будет анимировано ── */
-.chap { will-change: opacity, transform; }
+/* ── will-change + GPU compositing ── */
+.chap { will-change: opacity, transform; transform: translateZ(0); }
 .hdr-cta { will-change: transform; }
 .c4-cta  { will-change: transform, box-shadow; }
 .srv-card { will-change: transform, opacity; }
 .agent-chat { will-change: opacity, transform; }
-.agent-character { will-change: transform; }
+.agent-character { will-change: transform; transform: translateZ(0); }
 #ring-fill { will-change: stroke-dashoffset; }
+#fx-canvas { transform: translateZ(0); will-change: contents; }
+#agent-canvas { transform: translateZ(0); }
 
 /* ── contain: ускоряем layout recalc ── */
 .srv-card { contain: layout style; }
