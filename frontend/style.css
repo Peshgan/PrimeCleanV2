@@ -992,6 +992,40 @@ body.no-canvas #fx-canvas { display: none; }
 }
 .f-group select option { background: #0d1020; }
 .f-group textarea { resize: vertical; min-height: 80px; }
+
+/* Date picker — invert calendar icon for dark theme */
+.f-group input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.6);
+  cursor: pointer;
+  transition: filter .2s;
+}
+.f-group input[type="date"]::-webkit-calendar-picker-indicator:hover { filter: invert(1); }
+.f-group input[type="date"]::-webkit-datetime-edit-text,
+.f-group input[type="date"]::-webkit-datetime-edit-month-field,
+.f-group input[type="date"]::-webkit-datetime-edit-day-field,
+.f-group input[type="date"]::-webkit-datetime-edit-year-field { color: rgba(255,255,255,.8); }
+.f-group input[type="date"]:invalid::-webkit-datetime-edit { color: rgba(255,255,255,.2); }
+
+/* Discount badge */
+.f-discount-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-family: Inter, sans-serif;
+  font-weight: 700;
+  color: #00eaff;
+  background: rgba(0,234,255,.1);
+  border: 1px solid rgba(0,234,255,.28);
+  border-radius: 20px;
+  padding: 4px 10px;
+  letter-spacing: .03em;
+  animation: badge-pop .3s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes badge-pop {
+  from { opacity: 0; transform: scale(.8) translateY(4px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
 #form-btn {
   display: flex;
   align-items: center;

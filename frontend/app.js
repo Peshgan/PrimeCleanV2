@@ -1184,23 +1184,32 @@ function initAgent() {
   }
 
   function prefillForm(data) {
-    const contactForm = document.getElementById('contact-form');
-    if (!contactForm) return;
-    const nameInput    = contactForm.querySelector('input[type="text"]');
-    const phoneInp     = document.getElementById('phone-input');
-    const serviceSelect = contactForm.querySelector('select');
-    if (nameInput  && data.name)    nameInput.value  = data.name;
-    if (phoneInp   && data.phone)   phoneInp.value   = data.phone;
+    const nameInput     = document.getElementById('name-input');
+    const phoneInp      = document.getElementById('phone-input');
+    const serviceSelect = document.getElementById('service-select');
+    const textarea      = document.getElementById('comment-input');
+
+    if (nameInput  && data.name)  nameInput.value  = data.name;
+    if (phoneInp   && data.phone) phoneInp.value   = data.phone;
+
     if (serviceSelect && data.service) {
-      const opt = Array.from(serviceSelect.options)
-        .find(o => o.text.toLowerCase().includes(data.service.toLowerCase().slice(0, 8)));
+      const query = data.service.toLowerCase();
+      // Try: exact match → partial (any word) → first chars
+      const opt = Array.from(serviceSelect.options).find(o => {
+        const t = o.text.toLowerCase();
+        return t === query
+          || query.split(/\s+/).some(w => w.length > 3 && t.includes(w))
+          || t.includes(query.slice(0, 6));
+      });
       if (opt) serviceSelect.value = opt.value || opt.text;
     }
-    const textarea = contactForm.querySelector('textarea');
-    if (textarea && data.comment)  textarea.value = data.comment;
-    // вспышка на форме
+
+    if (textarea && data.comment) textarea.value = data.comment;
+
+    // Scroll to form and flash highlight
     const section = document.getElementById('contact-anchor');
     if (section) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'center' });
       section.classList.add('form-prefilled');
       setTimeout(() => section.classList.remove('form-prefilled'), 2000);
     }
@@ -1508,6 +1517,18 @@ function initForm(PERF = 'high') {
     launchParticles();
   }
 
+  // ── Date picker: min = today + 2 days, show discount badge on pick ──
+  const dateInput     = document.getElementById('date-input');
+  const discountBadge = document.getElementById('f-discount-badge');
+  if (dateInput) {
+    const minDate = new Date();
+    minDate.setDate(minDate.getDate() + 2);
+    dateInput.min = minDate.toISOString().split('T')[0];
+    dateInput.addEventListener('change', () => {
+      if (discountBadge) discountBadge.hidden = !dateInput.value;
+    });
+  }
+
   // ── Form submit ──
   const form = document.getElementById('contact-form');
   if (!form) return;
@@ -1519,17 +1540,25 @@ function initForm(PERF = 'high') {
     btn.querySelector('span').textContent = 'Отправляем…';
     btn.disabled = true;
 
-    const name    = form.querySelector('input[type="text"]')?.value?.trim() || '';
-    const phone   = document.getElementById('phone-input')?.value?.trim() || '';
-    const service = form.querySelector('select')?.value || '';
-    const message = form.querySelector('textarea')?.value?.trim() || '';
+    const name    = document.getElementById('name-input')?.value?.trim()    || '';
+    const phone   = document.getElementById('phone-input')?.value?.trim()   || '';
+    const service = document.getElementById('service-select')?.value        || '';
+    const date    = document.getElementById('date-input')?.value            || '';
+    const time    = document.getElementById('time-input')?.value            || '';
+    const message = document.getElementById('comment-input')?.value?.trim() || '';
+
+    // Append date/time and discount to message for the operator
+    const dateParts = [];
+    if (date) dateParts.push(`Дата: ${date}`);
+    if (time) dateParts.push(`Время: ${time}`);
+    if (date) dateParts.push('Скидка: −5% (раннее бронирование)');
+    const fullMessage = [message, ...dateParts].filter(Boolean).join(' | ');
 
     try {
-      const leadsUrl = API_URL + '/api/leads';
-      const res = await fetch(leadsUrl, {
+      const res = await fetch(API_URL + '/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, phone, service, message, source: 'website-form' }),
+        body: JSON.stringify({ name, phone, service, message: fullMessage, source: 'website-form' }),
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
     } catch (err) {
@@ -1541,6 +1570,7 @@ function initForm(PERF = 'high') {
     btn.querySelector('span').textContent = 'Отправить заявку';
     btn.disabled = false;
     form.reset();
+    if (discountBadge) discountBadge.hidden = true;
   });
 }
 
