@@ -71,6 +71,7 @@ const IS_MOBILE = window.innerWidth <= 768;
   });
 
   function exitPreloader() {
+    window.scrollTo(0, 0);
     document.body.style.overflow = '';
     pl.classList.add('exit');
     pl.addEventListener('animationend', () => { pl.style.display = 'none'; }, { once: true });
