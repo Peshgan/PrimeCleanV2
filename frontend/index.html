@@ -559,6 +559,30 @@
 
   </div><!-- /site -->
 
+  <!-- ══════ SERVICE MODAL ══════ -->
+  <div id="srv-modal" class="svm-overlay" aria-modal="true" role="dialog" aria-hidden="true">
+    <div class="svm-backdrop" id="svm-backdrop"></div>
+    <div class="svm-card">
+      <button class="svm-close" id="svm-close" aria-label="Закрыть">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <div class="svm-img-wrap">
+        <picture id="svm-pic"></picture>
+        <div class="svm-img-grad"></div>
+        <span class="svm-num" id="svm-num"></span>
+      </div>
+      <div class="svm-body">
+        <h3 class="svm-title" id="svm-title"></h3>
+        <p class="svm-desc" id="svm-desc"></p>
+        <ul class="svm-features" id="svm-features"></ul>
+        <div class="svm-price-row" id="svm-price-row"></div>
+        <a class="svm-cta" id="svm-cta" href="#contact-anchor">Заказать уборку <span>→</span></a>
+      </div>
+    </div>
+  </div>
+
   <!-- ══════ FORM SUCCESS OVERLAY ══════ -->
   <div id="form-success" class="fs-overlay" hidden>
     <canvas id="fs-canvas" class="fs-canvas"></canvas>

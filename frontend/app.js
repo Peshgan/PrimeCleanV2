@@ -123,6 +123,7 @@ function initSite() {
 
   initScrollExp(PERF);
   initNav();
+  initServiceModal();
   initForm(PERF);
   initCardTilt();
   initServicesReveal();
@@ -1541,4 +1542,117 @@ function initForm(PERF = 'high') {
     btn.disabled = false;
     form.reset();
   });
+}
+
+/* ═══════════════════════════════
+   SERVICE MODAL
+═══════════════════════════════ */
+function initServiceModal() {
+  const overlay  = document.getElementById('srv-modal');
+  const backdrop = document.getElementById('svm-backdrop');
+  const closeBtn = document.getElementById('svm-close');
+  const pic      = document.getElementById('svm-pic');
+  const numEl    = document.getElementById('svm-num');
+  const titleEl  = document.getElementById('svm-title');
+  const descEl   = document.getElementById('svm-desc');
+  const featEl   = document.getElementById('svm-features');
+  const priceEl  = document.getElementById('svm-price-row');
+  if (!overlay) return;
+
+  const DATA = {
+    '1': {
+      num: '01',
+      title: 'УБОРКА ЖИЛОГО\nПОМЕЩЕНИЯ',
+      desc: 'Генеральная и поддерживающая уборка квартир и домов. Наводим порядок в каждом уголке — от плинтусов до люстр.',
+      features: ['Генеральная и поддерживающая уборка', 'Мытьё окон изнутри и снаружи', 'Глубокая дезинфекция санузлов', 'Полная уборка кухни'],
+      price: 'от 120 BYN', note: 'Без предоплаты · Гарантия 24 ч',
+      imgWebp: 'motion/image/s1_apartment-750.webp', imgJpg: 'motion/image/s1_apartment.jpg', imgAlt: 'Уборка жилого помещения',
+    },
+    '2': {
+      num: '02',
+      title: 'ПРОМЫШЛЕННЫЙ\nКЛИНИНГ',
+      desc: 'Профессиональная уборка заводов, складов и производственных помещений. Специальная техника и сертифицированная химия.',
+      features: ['Заводы, склады и цеха', 'Производственные зоны', 'Прилегающие территории', 'Спецоборудование и химия'],
+      price: 'По запросу', note: 'Индивидуальный расчёт',
+      imgWebp: 'motion/image/s2_industrial-750.webp', imgJpg: 'motion/image/s2_industrial.jpg', imgAlt: 'Промышленный клининг',
+    },
+    '3': {
+      num: '03',
+      title: 'ХИМЧИСТКА\nМЕБЕЛИ',
+      desc: 'Профессиональная чистка диванов, матрасов, ковров и кресел. Удаляем глубокие загрязнения и устраняем запахи.',
+      features: ['Диваны и кресла', 'Матрасы и подушки', 'Ковры и ковролин', 'Автомобильные салоны'],
+      price: 'от 35 BYN', note: 'Кресло / Диван от 90 / Ковёр 10/м²',
+      imgWebp: 'motion/image/s3_dryclean-750.webp', imgJpg: 'motion/image/s3_dryclean.jpg', imgAlt: 'Химчистка мебели',
+    },
+    '4': {
+      num: '04',
+      title: 'УБОРКА ПОСЛЕ\nРЕМОНТА',
+      desc: 'Полная очистка помещения после строительных и отделочных работ. Убираем пыль, раствор, остатки краски — до блеска.',
+      features: ['Строительная пыль и загрязнения', 'Очистка окон и кафеля', 'Полировка новых поверхностей', 'Вывоз строительного мусора'],
+      price: 'от 350 BYN', note: '1-комн. / крупные объекты — по запросу',
+      imgWebp: 'motion/image/ch3_renovation-750.webp', imgJpg: 'motion/image/ch3_renovation.jpg', imgAlt: 'Уборка после ремонта',
+    },
+    '5': {
+      num: '05',
+      title: 'ГЕНЕРАЛЬНАЯ\nУБОРКА',
+      desc: 'Комплексная глубокая уборка всего помещения. Моем всё: потолки, стены, технику изнутри, шкафы, люстры.',
+      features: ['Все поверхности и труднодоступные места', 'Стёкла, люстры, батареи', 'Холодильник и духовка изнутри', 'Глубокая дезинфекция'],
+      price: 'от 350 BYN', note: '1-комн. / от 450 за 2-комн.',
+      imgWebp: 'motion/image/s5_general-750.webp', imgJpg: 'motion/image/s5_general.jpg', imgAlt: 'Генеральная уборка',
+    },
+    '6': {
+      num: '06',
+      title: 'НЕ НАШЛИ\nНУЖНУЮ УСЛУГУ?',
+      desc: 'Нестандартный объект или особые требования? Опишите задачу — составим персональный план и назовём цену за 15 минут.',
+      features: ['Любой нестандартный объект', 'Индивидуальный план уборки', 'Специальные условия сотрудничества', 'Ответ на заявку за 15 минут'],
+      price: 'Обсуждается', note: 'Бесплатная консультация',
+      imgWebp: 'motion/image/s6_contact-750.webp', imgJpg: 'motion/image/s6_contact.jpg', imgAlt: 'Индивидуальный запрос',
+    },
+  };
+
+  function open(id) {
+    const d = DATA[id];
+    if (!d) return;
+
+    pic.innerHTML = `
+      <source srcset="${d.imgWebp}" type="image/webp">
+      <img src="${d.imgJpg}" alt="${d.imgAlt}" width="520" height="230" decoding="async">
+    `;
+    numEl.textContent  = d.num;
+    titleEl.innerHTML  = d.title.replace('\n', '<br>');
+    descEl.textContent = d.desc;
+    featEl.innerHTML   = d.features.map(f => `<li>${f}</li>`).join('');
+    priceEl.innerHTML  = `
+      <span class="svm-price-icon">💎</span>
+      <span class="svm-price-text">
+        <span class="svm-price-val">${d.price}</span>
+        <span class="svm-price-note">${d.note}</span>
+      </span>
+    `;
+
+    overlay.setAttribute('aria-hidden', 'false');
+    overlay.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function close() {
+    overlay.classList.remove('is-open');
+    overlay.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  // Open on card click (but not on CTA link click)
+  document.querySelectorAll('.srv-card').forEach(card => {
+    card.addEventListener('click', e => {
+      if (e.target.closest('.srv-cta')) return;
+      open(card.dataset.srv);
+    });
+  });
+
+  closeBtn.addEventListener('click', close);
+  backdrop.addEventListener('click', close);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+
+  // Close modal when CTA link inside it is clicked
+  document.getElementById('svm-cta')?.addEventListener('click', close);
 }
