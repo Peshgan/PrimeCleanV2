@@ -123,6 +123,7 @@ function initSite() {
 
   initScrollExp(PERF);
   initNav();
+  initBooking();
   initForm(PERF);
   initCardTilt();
   initServicesReveal();
@@ -1541,4 +1542,256 @@ function initForm(PERF = 'high') {
     btn.disabled = false;
     form.reset();
   });
+}
+
+/* ═══════════════════════════════
+   BOOKING CALCULATOR
+═══════════════════════════════ */
+function initBooking() {
+  const panel    = document.getElementById('bk-panel');
+  const labelEl  = document.getElementById('bk-step-label');
+  if (!panel) return;
+
+  const SERVICES = [
+    { id: 'support',   icon: '🧹', label: 'Поддерживающая', sub: 'Регулярная поддержка чистоты' },
+    { id: 'general',   icon: '✨', label: 'Генеральная',     sub: 'Глубокая уборка всей квартиры' },
+    { id: 'repair',    icon: '🔨', label: 'После ремонта',   sub: 'Очистка от строительной пыли' },
+    { id: 'furniture', icon: '🛋', label: 'Химчистка мебели', sub: 'Диван, матрас, ковёр, кресло' },
+    { id: 'windows',   icon: '🪟', label: 'Мойка окон',       sub: 'Изнутри и снаружи' },
+  ];
+
+  const SIZES = {
+    support:   [
+      { id: 's1', label: '1-комнатная', price: 120 },
+      { id: 's2', label: '2-комнатная', price: 150 },
+      { id: 's3', label: '3-комнатная', price: 180 },
+      { id: 'sm', label: 'Дом / больше', price: null },
+    ],
+    general:   [
+      { id: 's1', label: '1-комнатная', price: 350 },
+      { id: 's2', label: '2-комнатная', price: 450 },
+      { id: 's3', label: '3-комнатная', price: 550 },
+      { id: 'sm', label: 'Дом / больше', price: null },
+    ],
+    repair:    [
+      { id: 's1', label: '1-комнатная', price: 350 },
+      { id: 's2', label: '2-комнатная', price: 450 },
+      { id: 's3', label: '3-комнатная', price: 550 },
+      { id: 'sm', label: 'Дом / больше', price: null },
+    ],
+    furniture: [
+      { id: 'f23',  label: 'Диван 2–3 места', price: 98 },
+      { id: 'f4',   label: 'Угловой диван',   price: 133 },
+      { id: 'fmat', label: 'Матрас',           price: 75 },
+      { id: 'fch',  label: 'Кресло / Стул',    price: 35 },
+    ],
+    windows:   [
+      { id: 'w3',  label: '1–3 створки',  price: 45 },
+      { id: 'w6',  label: '4–6 створок',  price: 90 },
+      { id: 'w10', label: '7–10 створок', price: 150 },
+      { id: 'wm',  label: 'Больше 10',    price: null },
+    ],
+  };
+
+  const WHEN = [
+    { id: 'today',    label: 'Сегодня',  sub: 'Выедем в ближайшие часы', disc: 0 },
+    { id: 'tomorrow', label: 'Завтра',   sub: 'Удобное утреннее время',   disc: 0 },
+    { id: 'plan',     label: 'Планово',  sub: 'Выберем вместе',           disc: -5 },
+  ];
+
+  const FREQ = [
+    { id: 'once',     label: 'Разово',           sub: '',                   disc: 0 },
+    { id: 'biweekly', label: 'Раз в 2 недели',   sub: 'Всегда идеально',   disc: -10 },
+    { id: 'monthly',  label: 'Раз в месяц',       sub: 'Оптимальный выбор', disc: -7 },
+  ];
+
+  const LABELS = ['Что нужно убрать?', 'Какая площадь?', 'Когда удобно?', 'Как часто?', 'Ваш расчёт'];
+
+  let step = 0;
+  const sel = { service: null, size: null, when: null, freq: null };
+
+  function basePrice() {
+    const svc = SIZES[sel.service];
+    if (!svc) return null;
+    return svc.find(s => s.id === sel.size)?.price ?? null;
+  }
+
+  function finalPrice() {
+    const base = basePrice();
+    if (base === null) return null;
+    const disc = (WHEN.find(w => w.id === sel.when)?.disc || 0) +
+                 (FREQ.find(f => f.id === sel.freq)?.disc || 0);
+    return disc < 0 ? Math.round(base * (1 + disc / 100)) : base;
+  }
+
+  function totalDisc() {
+    return (WHEN.find(w => w.id === sel.when)?.disc || 0) +
+           (FREQ.find(f => f.id === sel.freq)?.disc || 0);
+  }
+
+  function updateDots() {
+    document.querySelectorAll('.bk-dot').forEach((dot, i) => {
+      dot.classList.toggle('bk-dot--active', i <= step);
+      dot.classList.toggle('bk-dot--current', i === step);
+    });
+    document.querySelectorAll('.bk-dot-line').forEach((line, i) => {
+      line.classList.toggle('bk-dot-line--active', i < step);
+    });
+    if (labelEl) labelEl.textContent = LABELS[step] || '';
+  }
+
+  function goTo(s, instant) {
+    step = s;
+    if (instant) {
+      panel.innerHTML = buildStep();
+      panel.classList.add('bk-panel--enter');
+      attachListeners();
+      updateDots();
+      return;
+    }
+    panel.classList.add('bk-panel--exit');
+    panel.classList.remove('bk-panel--enter');
+    setTimeout(() => {
+      panel.innerHTML = buildStep();
+      panel.classList.remove('bk-panel--exit');
+      panel.classList.add('bk-panel--enter');
+      attachListeners();
+      updateDots();
+    }, 180);
+  }
+
+  function card(item, selId) {
+    const sel = selId === item.id;
+    return `<button class="bk-card${sel ? ' bk-card--sel' : ''}" data-id="${item.id}" type="button">
+      ${item.icon ? `<span class="bk-card-icon">${item.icon}</span>` : ''}
+      <span class="bk-card-label">${item.label}</span>
+      ${item.sub ? `<span class="bk-card-sub">${item.sub}</span>` : ''}
+      ${item.disc ? `<span class="bk-card-badge">${item.disc}%</span>` : ''}
+    </button>`;
+  }
+
+  function buildStep() {
+    if (step === 0) return `<div class="bk-grid bk-grid--services">${SERVICES.map(s => card(s, sel.service)).join('')}</div>`;
+    if (step === 1) return `<div class="bk-grid bk-grid--sizes">${(SIZES[sel.service]||[]).map(s => card(s, sel.size)).join('')}</div>`;
+    if (step === 2) return `<div class="bk-grid bk-grid--when">${WHEN.map(w => card(w, sel.when)).join('')}</div>`;
+    if (step === 3) return `<div class="bk-grid bk-grid--freq">${FREQ.map(f => card(f, sel.freq)).join('')}</div>`;
+    if (step === 4) return buildContact();
+    return '';
+  }
+
+  function buildContact() {
+    const price = finalPrice();
+    const disc  = totalDisc();
+    const svcLabel  = SERVICES.find(s => s.id === sel.service)?.label || '';
+    const whenLabel = WHEN.find(w => w.id === sel.when)?.label || '';
+    const freqObj   = FREQ.find(f => f.id === sel.freq);
+
+    const priceBlock = price !== null
+      ? `<span class="bk-price-label">Стоимость</span>
+         <span class="bk-price-val">от ${price}<small>BYN</small></span>
+         ${disc < 0 ? `<span class="bk-price-disc">Скидка ${disc}%</span>` : ''}`
+      : `<span class="bk-price-call">Уточним по телефону —<br>это займёт 2 минуты</span>`;
+
+    const tags = [svcLabel, whenLabel, freqObj?.id !== 'once' ? freqObj?.label : '']
+      .filter(Boolean).map(t => `<span class="bk-tag">${t}</span>`).join('');
+
+    return `
+      <div class="bk-summary">
+        <div class="bk-price">${priceBlock}</div>
+        ${tags ? `<div class="bk-summary-tags">${tags}</div>` : ''}
+      </div>
+      <form class="bk-form" id="bk-form" novalidate>
+        <div class="bk-form-row">
+          <div class="bk-field">
+            <label>Имя</label>
+            <input type="text" name="bk_name" placeholder="Иван" autocomplete="name" required>
+          </div>
+          <div class="bk-field">
+            <label>Телефон</label>
+            <input type="tel" name="bk_phone" placeholder="+375 44 478-93-60" autocomplete="tel" required>
+          </div>
+        </div>
+        <button class="bk-submit" type="submit">
+          <span>Отправить заявку</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </form>
+      <button class="bk-back" id="bk-back" type="button">← Изменить параметры</button>
+    `;
+  }
+
+  function attachListeners() {
+    panel.querySelectorAll('.bk-card').forEach(c => {
+      c.addEventListener('click', () => {
+        const id = c.dataset.id;
+        switch (step) {
+          case 0:
+            sel.service = id; sel.size = null; sel.when = null; sel.freq = null;
+            goTo(1);
+            break;
+          case 1:
+            sel.size = id;
+            // skip when/freq if price can't be calculated
+            goTo((SIZES[sel.service]||[]).find(s => s.id === id)?.price === null ? 4 : 2);
+            break;
+          case 2: sel.when = id; goTo(3); break;
+          case 3: sel.freq = id; goTo(4); break;
+        }
+      });
+    });
+
+    const bkForm = document.getElementById('bk-form');
+    if (bkForm) {
+      bkForm.addEventListener('submit', async e => {
+        e.preventDefault();
+        const name  = bkForm.querySelector('[name="bk_name"]').value.trim();
+        const phone = bkForm.querySelector('[name="bk_phone"]').value.trim();
+        if (!name || !phone) return;
+
+        const submitBtn = bkForm.querySelector('.bk-submit');
+        submitBtn.disabled = true;
+        submitBtn.querySelector('span').textContent = 'Отправляем…';
+
+        const price = finalPrice();
+        const szObj = (SIZES[sel.service]||[]).find(s => s.id === sel.size);
+        const whenLabel = WHEN.find(w => w.id === sel.when)?.label || '';
+        const freqObj   = FREQ.find(f => f.id === sel.freq);
+        const svcLabel  = SERVICES.find(s => s.id === sel.service)?.label || '';
+        const comment = [
+          szObj?.label,
+          whenLabel,
+          freqObj?.id !== 'once' ? freqObj?.label : null,
+          price != null ? `Расчёт: от ${price} BYN` : 'Уточнить цену',
+        ].filter(Boolean).join(' | ');
+
+        try {
+          await fetch(API_URL + '/api/leads', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, phone, service: svcLabel, message: comment, source: 'booking-widget' }),
+          });
+        } catch (_) {}
+
+        // reuse main form success overlay
+        const fsOverlay = document.getElementById('form-success');
+        if (fsOverlay) {
+          fsOverlay.hidden = false;
+          if (typeof gtag === 'function') gtag('event', 'conversion', { event_category: 'lead', event_label: 'booking_submit' });
+          if (typeof ym   === 'function') ym(0, 'reachGoal', 'booking_submit');
+        }
+
+        // reset to step 0
+        step = 0;
+        Object.keys(sel).forEach(k => sel[k] = null);
+        goTo(0);
+      });
+    }
+
+    const bkBack = document.getElementById('bk-back');
+    if (bkBack) bkBack.addEventListener('click', () => goTo(step > 1 ? step - 1 : 0));
+  }
+
+  goTo(0, true);
 }
