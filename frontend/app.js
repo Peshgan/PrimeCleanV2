@@ -1230,6 +1230,7 @@ function initAgent() {
     if (!text || state === 'talking') return;
     input.value = '';
     input.style.height = 'auto';
+    input.focus(); // удерживаем клавиатуру на iOS
     addMessage('user', text);
     history.push({ role: 'user', content: text });
 
@@ -1264,6 +1265,7 @@ function initAgent() {
   }
 
   sendBtn.addEventListener('click', sendMessage);
+  sendBtn.addEventListener('mousedown', e => e.preventDefault()); // не забирать фокус у input на iOS
 
   // Enter — отправить, Shift+Enter — новая строка
   input.addEventListener('keydown', e => {
