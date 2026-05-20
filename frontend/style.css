@@ -16,10 +16,7 @@
 
 /* ── RESET ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html {
-  font-size: 16px;
-  overflow-x: hidden; /* iOS Safari: body overflow-x:hidden недостаточно */
-}
+html { font-size: 16px; }
 body {
   font-family: 'Inter', system-ui, sans-serif;
   background: var(--dark);
@@ -222,8 +219,6 @@ a, button, [role="button"], input, select, textarea, label {
   height: 100vh;   /* fallback: iOS < 15.4, older Android */
   height: 100svh;  /* small viewport height — excludes browser chrome */
   overflow: hidden;
-  transform: translateZ(0); /* принудительный GPU-слой на iOS */
-  will-change: transform;
 }
 
 /* ── VIDEO ── */
