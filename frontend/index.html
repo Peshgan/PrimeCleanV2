@@ -10,32 +10,45 @@
   <meta property="og:type" content="website">
   <meta property="og:locale" content="ru_BY">
   <title>PrimeClean — Профессиональный клининг в Беларуси</title>
+  <!-- Resource hints -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="dns-prefetch" href="https://backend-production-95d8.up.railway.app">
+
+  <!-- Fonts: display=swap prevents render-blocking -->
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
+
+  <!-- Preload critical assets -->
+  <link rel="preload" href="motion/video/start_site.mp4" as="video" type="video/mp4">
+  <link rel="preload" href="motion/image/start_site.jpg" as="image">
+
   <link rel="stylesheet" href="style.css">
+
   <!-- Backend API URL -->
   <script>window.PC_API = 'https://backend-production-95d8.up.railway.app';</script>
 
   <!-- ══════ Google Analytics 4 ══════ -->
   <!-- Замени G-XXXXXXXXXX на свой Measurement ID из analytics.google.com -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script defer src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    gtag('config', 'G-XXXXXXXXXX');
+    gtag('config', 'G-XXXXXXXXXX', { send_page_view: false });
+    window.addEventListener('load', () => gtag('event', 'page_view'));
   </script>
 
   <!-- ══════ Яндекс.Метрика ══════ -->
   <!-- Замени 00000000 на свой номер счётчика из metrika.yandex.ru -->
-  <script type="text/javascript">
-    (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-    m[i].l=1*new Date();
-    for(var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}
-    k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
-    (window,document,"script","https://mc.yandex.ru/metrika/tag.js","ym");
-    ym(0,"init",{clickmap:true,trackLinks:true,accurateTrackBounce:true,webvisor:true});
+  <script>
+    window.addEventListener('load', function() {
+      (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+      m[i].l=1*new Date();
+      k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+      (window,document,"script","https://mc.yandex.ru/metrika/tag.js","ym");
+      ym(0,"init",{clickmap:true,trackLinks:true,accurateTrackBounce:true,webvisor:true});
+    });
   </script>
   <noscript><div><img src="https://mc.yandex.ru/watch/0" style="position:absolute;left:-9999px;" alt="" /></div></noscript>
 </head>
@@ -73,7 +86,10 @@
     <!-- MINIMAL NAV -->
     <header id="hdr">
       <a href="#" class="hdr-logo">
-        <img src="motion/image/start_site.jpg" alt="PrimeClean">
+        <picture>
+          <source srcset="motion/image/start_site.webp" type="image/webp">
+          <img src="motion/image/start_site.jpg" alt="" width="36" height="36" fetchpriority="high" aria-hidden="true">
+        </picture>
         <span>PrimeClean</span>
       </a>
       <a href="#contact-anchor" class="hdr-cta">Заказать уборку</a>
@@ -86,7 +102,7 @@
       <div id="scroll-sticky">
 
         <!-- VIDEO (scroll-driven) — metadata only, loaded on demand -->
-        <video id="sv" muted preload="metadata" playsinline
+        <video id="sv" muted preload="metadata" playsinline>
           <source src="motion/video/Backgroundscrollanimation.mp4" type="video/mp4">
         </video>
 
@@ -127,7 +143,10 @@
                 </div>
               </div>
               <div class="chap-img-card tilt-card" data-parallax="0.2">
-                <img src="motion/image/ch1_apartments.jpg" alt="Уборка квартир — до и после">
+                <picture>
+                  <source type="image/webp" srcset="motion/image/ch1_apartments-500.webp 500w, motion/image/ch1_apartments-900.webp 900w" sizes="(max-width:768px) 80vw, 480px">
+                  <img src="motion/image/ch1_apartments.jpg" alt="Уборка квартир — до и после" width="480" height="360" decoding="async">
+                </picture>
                 <div class="img-badge">До / После</div>
               </div>
             </div>
@@ -137,7 +156,10 @@
           <div class="chap" id="chap-2" data-from="0.38" data-to="0.58">
             <div class="chap-inner chap-right">
               <div class="chap-img-card tilt-card" data-parallax="0.2">
-                <img src="motion/image/ch2_office.jpg" alt="Офисный клининг">
+                <picture>
+                  <source type="image/webp" srcset="motion/image/ch2_office-500.webp 500w, motion/image/ch2_office-900.webp 900w" sizes="(max-width:768px) 80vw, 480px">
+                  <img src="motion/image/ch2_office.jpg" alt="Офисный клининг" width="480" height="360" decoding="async">
+                </picture>
                 <div class="img-badge">Ночная смена</div>
               </div>
               <div class="chap-num" data-parallax="-0.3">02</div>
@@ -171,7 +193,10 @@
                 </div>
               </div>
               <div class="chap-img-card tilt-card" data-parallax="0.2">
-                <img src="motion/image/ch3_renovation.jpg" alt="Уборка после ремонта">
+                <picture>
+                  <source type="image/webp" srcset="motion/image/ch3_renovation-500.webp 500w, motion/image/ch3_renovation-900.webp 900w" sizes="(max-width:768px) 80vw, 480px">
+                  <img src="motion/image/ch3_renovation.jpg" alt="Уборка после ремонта" width="480" height="360" decoding="async">
+                </picture>
                 <div class="img-badge">Гарантия чистоты</div>
               </div>
             </div>
@@ -231,7 +256,10 @@
           <div class="srv-card" data-srv="1">
             <div class="srv-num">01</div>
             <div class="srv-img-wrap">
-              <img src="motion/image/s1_apartment.jpg" alt="Уборка жилого помещения" loading="lazy" decoding="async">
+              <picture>
+                  <source type="image/webp" srcset="motion/image/s1_apartment-400.webp 400w, motion/image/s1_apartment-750.webp 750w" sizes="(max-width:600px) 100vw, 400px">
+                  <img src="motion/image/s1_apartment.jpg" alt="Уборка жилого помещения" loading="lazy" decoding="async" width="400" height="300">
+                </picture>
               <div class="srv-img-gradient"></div>
             </div>
             <div class="srv-body">
@@ -250,7 +278,10 @@
           <div class="srv-card" data-srv="2">
             <div class="srv-num">02</div>
             <div class="srv-img-wrap">
-              <img src="motion/image/s2_industrial.jpg" alt="Промышленный клининг" loading="lazy" decoding="async">
+              <picture>
+                  <source type="image/webp" srcset="motion/image/s2_industrial-400.webp 400w, motion/image/s2_industrial-750.webp 750w" sizes="(max-width:600px) 100vw, 400px">
+                  <img src="motion/image/s2_industrial.jpg" alt="Промышленный клининг" loading="lazy" decoding="async" width="400" height="300">
+                </picture>
               <div class="srv-img-gradient"></div>
             </div>
             <div class="srv-body">
@@ -269,7 +300,10 @@
           <div class="srv-card" data-srv="3">
             <div class="srv-num">03</div>
             <div class="srv-img-wrap">
-              <img src="motion/image/s3_dryclean.jpg" alt="Химчистка мебели" loading="lazy" decoding="async">
+              <picture>
+                  <source type="image/webp" srcset="motion/image/s3_dryclean-400.webp 400w, motion/image/s3_dryclean-750.webp 750w" sizes="(max-width:600px) 100vw, 400px">
+                  <img src="motion/image/s3_dryclean.jpg" alt="Химчистка мебели" loading="lazy" decoding="async" width="400" height="300">
+                </picture>
               <div class="srv-img-gradient"></div>
             </div>
             <div class="srv-body">
@@ -288,7 +322,10 @@
           <div class="srv-card" data-srv="4">
             <div class="srv-num">04</div>
             <div class="srv-img-wrap">
-              <img src="motion/image/ch3_renovation.jpg" alt="Уборка после ремонта" loading="lazy" decoding="async">
+              <picture>
+                  <source type="image/webp" srcset="motion/image/ch3_renovation-400.webp 400w, motion/image/ch3_renovation-750.webp 750w" sizes="(max-width:600px) 100vw, 400px">
+                  <img src="motion/image/ch3_renovation.jpg" alt="Уборка после ремонта" loading="lazy" decoding="async" width="400" height="300">
+                </picture>
               <div class="srv-img-gradient"></div>
             </div>
             <div class="srv-body">
@@ -307,7 +344,10 @@
           <div class="srv-card" data-srv="5">
             <div class="srv-num">05</div>
             <div class="srv-img-wrap">
-              <img src="motion/image/s5_general.jpg" alt="Генеральная уборка" loading="lazy" decoding="async">
+              <picture>
+                  <source type="image/webp" srcset="motion/image/s5_general-400.webp 400w, motion/image/s5_general-750.webp 750w" sizes="(max-width:600px) 100vw, 400px">
+                  <img src="motion/image/s5_general.jpg" alt="Генеральная уборка" loading="lazy" decoding="async" width="400" height="300">
+                </picture>
               <div class="srv-img-gradient"></div>
             </div>
             <div class="srv-body">
@@ -326,7 +366,10 @@
           <div class="srv-card srv-card--special" data-srv="6">
             <div class="srv-num">06</div>
             <div class="srv-img-wrap">
-              <img src="motion/image/s6_contact.jpg" alt="Индивидуальный запрос" loading="lazy" decoding="async">
+              <picture>
+                  <source type="image/webp" srcset="motion/image/s6_contact-400.webp 400w, motion/image/s6_contact-750.webp 750w" sizes="(max-width:600px) 100vw, 400px">
+                  <img src="motion/image/s6_contact.jpg" alt="Индивидуальный запрос" loading="lazy" decoding="async" width="400" height="300">
+                </picture>
               <div class="srv-img-gradient"></div>
             </div>
             <div class="srv-body">
@@ -370,8 +413,8 @@
             </div>
           </div>
           <div class="f-group">
-            <label>Услуга</label>
-            <select>
+            <label for="service-select">Услуга</label>
+            <select id="service-select">
               <option value="">Выберите услугу</option>
               <option>Уборка жилых помещений</option>
               <option>Генеральная уборка</option>
@@ -436,7 +479,10 @@
       <div class="agent-chat" id="agent-chat">
         <div class="agent-chat-header">
           <div class="agent-avatar-mini">
-            <img src="motion/ai_agent/agent_no_booble_no_background.png" alt="">
+            <picture>
+              <source srcset="motion/ai_agent/agent_no_booble_no_background.webp" type="image/webp">
+              <img src="motion/ai_agent/agent_no_booble_no_background.png" alt="" width="80" height="80" decoding="async">
+            </picture>
           </div>
           <div class="agent-chat-info">
             <span class="agent-chat-name">Алиса</span>

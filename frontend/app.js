@@ -71,22 +71,22 @@ const API_URL = (window.PC_API || '').replace(/\/$/, '');
 ═══════════════════════════════ */
 function detectPerf() {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return 'low';
+  const conn = navigator.connection;
+  if (conn && (conn.saveData || conn.effectiveType === 'slow-2g' || conn.effectiveType === '2g')) return 'low';
+
   const mem = navigator.deviceMemory;
   if (mem !== undefined) {
     if (mem <= 1) return 'low';
-    if (mem <= 4) return 'medium';
+    if (mem <= 2) return 'medium';
   }
   const cores = navigator.hardwareConcurrency;
   if (cores !== undefined) {
     if (cores <= 2) return 'low';
     if (cores <= 4) return 'medium';
   }
-  const conn = navigator.connection;
-  if (conn) {
-    if (conn.saveData || conn.effectiveType === 'slow-2g' || conn.effectiveType === '2g') return 'low';
-    if (conn.effectiveType === '3g') return 'medium';
-  }
-  if (window.innerWidth < 480) return 'medium';
+  if (conn && conn.effectiveType === '3g') return 'medium';
+  // Small phones: treat as medium even if hardware is ok
+  if (window.innerWidth < 480 && window.devicePixelRatio >= 2) return 'medium';
   return 'high';
 }
 
@@ -139,14 +139,23 @@ function initScrollExp(PERF) {
 
   if (!hasDrawElement) {
     document.body.classList.add('no-canvas');
-    console.info('[PrimeClean] HTML-in-Canvas not available — using fallback. Enable chrome://flags/#canvas-draw-element for full experience.');
+    console.info('[PrimeClean] HTML-in-Canvas not available — using fallback.');
   }
 
-  // ── Setup WebGL (HTML-in-Canvas path) ──
+  // ── Setup WebGL (HTML-in-Canvas path, skip for low perf) ──
   let glState = null;
-  if (hasDrawElement) {
+  if (hasDrawElement && PERF !== 'low') {
     glState = setupWebGL(canvas);
+    if (!glState) document.body.classList.add('no-canvas');
+  } else if (!hasDrawElement || PERF === 'low') {
+    document.body.classList.add('no-canvas');
   }
+  // Hook into global GL loop
+  _glGlobalState = glState;
+  new IntersectionObserver(entries => {
+    _glSectionVisible = entries[0].isIntersecting;
+    if (_glSectionVisible) startGLLoop(); else stopGLLoop();
+  }, { threshold: 0 }).observe(section);
 
   // ── Scroll state ──
   let targetProg  = 0;
@@ -381,6 +390,7 @@ function setupWebGL(canvas) {
 }
 
 function renderToCanvas(state, htmlEl, progress) {
+  state._lastProgress = progress;
   const { gl, tex, ctx2d, offscreen, uTime, uProgress, uMouse, uRes, startTime, mouse } = state;
   const W = gl.canvas.width;
   const H = gl.canvas.height;
@@ -417,12 +427,27 @@ function renderToCanvas(state, htmlEl, progress) {
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 }
 
-// Continuous time-based render loop (for wave animation even without scroll)
-(function animLoop() {
-  // This is called in initScrollExp after glState is set — we do it differently:
-  // The scroll handler triggers render. For time-based effects, we add RAF.
-  // We store glState in module scope after init.
-})();
+// Continuous time-based render loop — keeps WebGL wave animation alive between scrolls
+// Runs only when: tab is visible + scroll-exp is in view + glState exists
+let _glGlobalState = null;
+let _glAnimRaf = null;
+let _glSectionVisible = false;
+
+function startGLLoop() {
+  if (_glAnimRaf || !_glGlobalState || document.hidden || !_glSectionVisible) return;
+  function loop() {
+    _glAnimRaf = requestAnimationFrame(loop);
+    const chapEl = document.getElementById('chapters');
+    if (chapEl && _glGlobalState) renderToCanvas(_glGlobalState, chapEl, _glGlobalState._lastProgress || 0);
+  }
+  _glAnimRaf = requestAnimationFrame(loop);
+}
+function stopGLLoop() {
+  if (_glAnimRaf) { cancelAnimationFrame(_glAnimRaf); _glAnimRaf = null; }
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) stopGLLoop(); else startGLLoop();
+});
 
 /* ═══════════════════════════════
    5. CUSTOM CURSOR
@@ -903,6 +928,18 @@ function initAgent() {
   let idlePulseTimer  = null;
   // Greet bubble убран — текст вошёл в очередь хинтов как первый показ
 
+  // ── Lazy-load greeting/talking WebM (idle loads immediately, rest only on first open) ──
+  let webmLoaded = false;
+  function ensureWebmLoaded() {
+    if (webmLoaded || needsWebmFallback) return;
+    webmLoaded = true;
+    [sGreet, sTalk].forEach(v => {
+      if (!v.src && v.querySelector('source')) {
+        v.load();
+      }
+    });
+  }
+
   // ── State machine ──
   function setState(s) {
     state = s;
@@ -1047,6 +1084,7 @@ function initAgent() {
     hint.classList.remove('visible');
     clearTimeout(hintTimer);
     clearInterval(widget._hintLoop);
+    ensureWebmLoaded();
 
     if (!greeted) {
       greeted = true;
@@ -1078,6 +1116,8 @@ function initAgent() {
     scheduleHint();
   }
 
+  // Preload greeting/talking WebM on hover so they're ready when needed
+  character.addEventListener('mouseenter', ensureWebmLoaded, { once: true, passive: true });
   character.addEventListener('click', openChat);
   character.addEventListener('touchend', e => { e.preventDefault(); openChat(); }, { passive: false });
   character.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') openChat(); });

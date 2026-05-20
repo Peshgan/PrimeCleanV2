@@ -908,7 +908,7 @@ body.no-canvas #fx-canvas { display: none; }
 .f-group label {
   font-size: 0.8rem;
   font-weight: 600;
-  color: rgba(255,255,255,0.4);
+  color: rgba(255,255,255,0.65);
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
@@ -988,6 +988,7 @@ body.no-canvas #fx-canvas { display: none; }
   align-items: center;
   gap: 6px;
   color: rgba(255,255,255,.5);
+  padding: 6px 0;
   font-family: Inter, sans-serif;
   font-size: 0.82rem;
   text-decoration: none;
@@ -1023,7 +1024,7 @@ body.no-canvas #fx-canvas { display: none; }
 .ft-social--vb:hover  { background: rgba(126,80,174,.2); border-color: rgba(126,80,174,.5); color: #9c6bc9; }
 .ft-social--wa:hover  { background: rgba(37,211,102,.2); border-color: rgba(37,211,102,.5); color: #25d366; }
 
-.ft-copy { color: rgba(255,255,255,0.25); font-size: 0.82rem; }
+.ft-copy { color: rgba(255,255,255,0.5); font-size: 0.82rem; }
 
 /* ══════════════════════════════════════════
    RESPONSIVE
@@ -2023,3 +2024,61 @@ body[data-perf="low"] #pl-sound       { backdrop-filter: none; }
   text-align: center;
   letter-spacing: 0.02em;
 }
+
+/* ══════════════════════════════════════════
+   PERFORMANCE LITE MODE
+   Applied via document.body.dataset.perf = 'low' | 'medium' | 'high'
+   and @media prefers-reduced-motion
+══════════════════════════════════════════ */
+
+/* ── prefers-reduced-motion: kill all non-essential animations ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .c0-title,
+  .c0-sub,
+  .c0-scroll-hint,
+  .scroll-wheel::before { animation: none !important; }
+  #fx-canvas { display: none !important; }
+  .agent-glow-ring { display: none !important; }
+}
+
+/* ── LOW perf: максимальная экономия ── */
+[data-perf="low"] #fx-canvas { display: none; }
+[data-perf="low"] #cur-dot,
+[data-perf="low"] #cur-ring { display: none; }
+[data-perf="low"] .c0-title { animation: none; }
+[data-perf="low"] .c0-sub   { animation: none; }
+[data-perf="low"] .scroll-wheel::before { animation: none; }
+[data-perf="low"] .c0-scroll-hint { animation: none; }
+[data-perf="low"] .agent-glow-ring { display: none; }
+[data-perf="low"] .chap-tags span { backdrop-filter: none; -webkit-backdrop-filter: none; }
+[data-perf="low"] .c4-stat { backdrop-filter: none; -webkit-backdrop-filter: none; }
+[data-perf="low"] .srv-card { backdrop-filter: none; -webkit-backdrop-filter: none; }
+[data-perf="low"] #hdr.scrolled { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(6,8,15,0.96); }
+[data-perf="low"] .agent-chat { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(6,8,15,0.97); }
+[data-perf="low"] .agent-intro { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(6,8,15,0.97); }
+
+/* ── MEDIUM perf: убираем WebGL, оставляем CSS анимации ── */
+[data-perf="medium"] #fx-canvas { opacity: 0.6; }
+[data-perf="medium"] .chap-tags span { backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+
+/* ── will-change: намекаем браузеру что будет анимировано ── */
+.chap { will-change: opacity, transform; }
+.hdr-cta { will-change: transform; }
+.c4-cta  { will-change: transform, box-shadow; }
+.srv-card { will-change: transform, opacity; }
+.agent-chat { will-change: opacity, transform; }
+.agent-character { will-change: transform; }
+#ring-fill { will-change: stroke-dashoffset; }
+
+/* ── contain: ускоряем layout recalc ── */
+.srv-card { contain: layout style; }
+.chap     { contain: layout; }
+.agent-msg { contain: content; }
