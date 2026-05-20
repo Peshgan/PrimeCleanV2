@@ -183,10 +183,8 @@ function initScrollExp(PERF) {
   // ── Scroll state ──
   let targetProg  = 0;
   let smoothProg  = 0;
-  let velocity    = 0;
-  const STIFFNESS = 0.018;
-  const DAMPING   = 0.78;
   let isAnimating = false;
+  const LERP      = 0.10; // фиксированная скорость сглаживания (одна скорость)
   const isMobile  = 'ontouchstart' in window;
 
   function getScrollProgress() {
@@ -230,12 +228,9 @@ function initScrollExp(PERF) {
   }
 
   function tick() {
-    const diff = targetProg - smoothProg;
-    velocity  += diff * STIFFNESS;
-    velocity  *= DAMPING;
-    smoothProg += velocity;
-    if (Math.abs(diff) < 0.00015 && Math.abs(velocity) < 0.00015) {
-      smoothProg = targetProg; velocity = 0; isAnimating = false;
+    smoothProg += (targetProg - smoothProg) * LERP;
+    if (Math.abs(targetProg - smoothProg) < 0.0002) {
+      smoothProg = targetProg; isAnimating = false;
       applyProgress(smoothProg); return;
     }
     applyProgress(smoothProg);
@@ -245,7 +240,6 @@ function initScrollExp(PERF) {
   window.addEventListener('scroll', () => {
     targetProg = getScrollProgress();
     if (isMobile) {
-      // На мобильных — прямое применение без spring-физики
       applyProgress(targetProg);
     } else if (!isAnimating) {
       isAnimating = true;
