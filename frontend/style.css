@@ -1512,6 +1512,15 @@ body[data-perf="low"] #pl-sound       { backdrop-filter: none; }
 /* mix-blend-mode:screen removes black bg on dark surface — all platforms */
 .agent-state { mix-blend-mode: screen; }
 
+/* Safari/iOS canvas renderer — video elements are opacity:0, canvas displays frames */
+#agent-canvas {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
 /* ── Chat panel ── */
 .agent-chat {
   width: 320px;

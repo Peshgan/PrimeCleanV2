@@ -902,6 +902,42 @@ function initAgent() {
     }
   }
 
+  // ── Safari/iOS: mix-blend-mode не применяется к <video>, рисуем через canvas ──
+  {
+    const ua = navigator.userAgent;
+    const isIOSDevice = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+    const isSafariBrowser = /^((?!chrome|android).)*safari/i.test(ua);
+    if (isIOSDevice || isSafariBrowser) {
+      const agentVideos = character.querySelector('.agent-videos');
+      const cvs = document.createElement('canvas');
+      cvs.id = 'agent-canvas';
+      agentVideos.appendChild(cvs);
+      const ctx2d = cvs.getContext('2d');
+      [sIdle, sGreet, sTalk].forEach(v => { v.style.opacity = '0'; });
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      (function drawAgentFrame() {
+        const av = [sIdle, sGreet, sTalk].find(v => v.classList.contains('is-active'));
+        if (av && av.readyState >= 2 && av.videoWidth) {
+          const cw = cvs.offsetWidth  * dpr;
+          const ch = cvs.offsetHeight * dpr;
+          if (cvs.width !== cw || cvs.height !== ch) { cvs.width = cw; cvs.height = ch; }
+          ctx2d.clearRect(0, 0, cw, ch);
+          const vw = av.videoWidth, vh = av.videoHeight;
+          if (av === sIdle) {
+            // object-fit: contain; object-position: bottom center
+            const sc = Math.min(cw / vw, ch / vh);
+            ctx2d.drawImage(av, (cw - vw * sc) * 0.5, ch - vh * sc, vw * sc, vh * sc);
+          } else {
+            // object-fit: cover; object-position: center 10%
+            const sc = Math.max(cw / vw, ch / vh);
+            ctx2d.drawImage(av, (cw - vw * sc) * 0.5, (ch - vh * sc) * 0.1, vw * sc, vh * sc);
+          }
+        }
+        requestAnimationFrame(drawAgentFrame);
+      })();
+    }
+  }
+
   // ── Hide during scroll-exp ──
   const scrollExp = document.getElementById('scroll-exp');
   if (scrollExp) {
