@@ -8,3 +8,6 @@ memory/
 черновики/
 footage/
 skills-lock.json
+.claude/settings.json
+/package.json
+/package-lock.json
