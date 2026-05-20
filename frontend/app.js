@@ -1125,17 +1125,13 @@ function initAgent() {
     });
   }
 
-  // ── visualViewport: держим чат над клавиатурой на iOS ──
+  // ── visualViewport resize: держим чат над клавиатурой на iOS ──
   if ('visualViewport' in window) {
     const vv = window.visualViewport;
-    function onViewport() {
+    vv.addEventListener('resize', () => {
       const kbHeight = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-      widget.style.bottom = kbHeight > 50
-        ? (kbHeight + 8) + 'px'
-        : '';
-    }
-    vv.addEventListener('resize', onViewport);
-    vv.addEventListener('scroll', onViewport);
+      widget.style.bottom = kbHeight > 50 ? (kbHeight + 8) + 'px' : '';
+    });
   }
 
   // ── Messages ──
