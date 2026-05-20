@@ -1509,9 +1509,7 @@ body[data-perf="low"] #pl-sound       { backdrop-filter: none; }
 /* Hint — теперь встроен в .agent-intro, отдельный элемент не нужен */
 .agent-hint { display: none; }
 
-/* Safari dual-plane canvas — screen blend removes black background */
-.agent-character canvas { mix-blend-mode: screen; }
-/* Regular WebM videos on Chrome — screen removes black if no alpha */
+/* mix-blend-mode:screen removes black bg on dark surface — all platforms */
 .agent-state { mix-blend-mode: screen; }
 
 /* ── Chat panel ── */

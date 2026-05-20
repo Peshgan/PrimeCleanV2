@@ -855,84 +855,6 @@ function initAgent() {
 
   if (!widget) return;
 
-  // ── Safari/iOS: WebM alpha не поддерживается — canvas dual-plane рендерер ──
-  const isIOS = /iPad|iPhone|iPod/i.test(navigator.userAgent) ||
-    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-  const needsWebmFallback = isIOS || isSafari;
-
-  let safariCtx = null, safariTmp = null, safariTmpCtx = null;
-  let safariVideos = {}, safariActive = null, safariRaf = null, safariTs = 0;
-
-  if (needsWebmFallback) {
-    [sIdle, sGreet, sTalk].forEach(v => { if (v) v.style.display = 'none'; });
-
-    // Canvas поверх .agent-videos
-    const cvs = document.createElement('canvas');
-    cvs.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;';
-    character.appendChild(cvs);
-    safariCtx = cvs.getContext('2d');
-
-    // Временный canvas для pixel compositing (willReadFrequently = быстрый readback)
-    safariTmp = document.createElement('canvas');
-    safariTmpCtx = safariTmp.getContext('2d', { willReadFrequently: true });
-
-    const makeSV = (src, loop) => {
-      const v = document.createElement('video');
-      v.src = src; v.muted = true; v.loop = loop;
-      v.playsInline = true; v.setAttribute('playsinline', '');
-      v.preload = 'auto'; v.load();
-      return v;
-    };
-
-    safariVideos = {
-      idle:     makeSV('motion/ai_agent/soon_combined_ios.mp4',   true),
-      greeting: makeSV('motion/ai_agent/helo_combined_ios.mp4',   false),
-      talking:  makeSV('motion/ai_agent/povest_combined_ios.mp4', true),
-    };
-
-    // Разблокировка видео на iOS (требует жест пользователя)
-    const unlockSafariVideos = () => {
-      Object.values(safariVideos).forEach(v => v.play().then(() => v.pause()).catch(() => {}));
-    };
-    document.addEventListener('touchstart', unlockSafariVideos, { once: true, passive: true });
-
-    function safariRender(ts) {
-      safariRaf = requestAnimationFrame(safariRender);
-      if (ts - safariTs < 33) return; // ~30fps cap
-      safariTs = ts;
-
-      const v = safariActive;
-      if (!v || v.readyState < 2 || v.paused) return;
-
-      const vw = v.videoWidth, vh = v.videoHeight;
-      const fh = vh >> 1;
-      const dispW = cvs.offsetWidth || 180;
-      const dispH = cvs.offsetHeight || 270;
-
-      if (cvs.width !== dispW || cvs.height !== dispH) {
-        cvs.width = dispW; cvs.height = dispH;
-      }
-      if (safariTmp.width !== dispW || safariTmp.height !== dispH * 2) {
-        safariTmp.width = dispW; safariTmp.height = dispH * 2;
-      }
-
-      // Рисуем весь dual-plane кадр масштабированно
-      safariTmpCtx.drawImage(v, 0, 0, vw, vh, 0, 0, dispW, dispH * 2);
-
-      const colorPx = safariTmpCtx.getImageData(0, 0,     dispW, dispH);
-      const alphaPx = safariTmpCtx.getImageData(0, dispH, dispW, dispH);
-      const cd = colorPx.data, ad = alphaPx.data;
-      for (let i = 0; i < cd.length; i += 4) {
-        const a = ad[i];
-        cd[i + 3] = a < 48 ? 0 : a;
-      }
-
-      safariCtx.clearRect(0, 0, dispW, dispH);
-      safariCtx.putImageData(colorPx, 0, 0);
-    }
-    safariRaf = requestAnimationFrame(safariRender);
-  }
 
   // ── API: all AI requests go through backend (API key stays server-side) ──
   const CHAT_URL = API_URL + '/api/chat';
@@ -947,7 +869,7 @@ function initAgent() {
   // ── Lazy-load greeting/talking WebM (preload="none" in HTML, triggered here) ──
   let webmLoaded = false;
   function ensureWebmLoaded() {
-    if (webmLoaded || needsWebmFallback) return;
+    if (webmLoaded) return;
     webmLoaded = true;
     [sGreet, sTalk].forEach(v => {
       if (v && v.readyState === 0) v.load(); // HAVE_NOTHING → trigger fetch
@@ -959,23 +881,7 @@ function initAgent() {
     state = s;
     character.dataset.state = s;
 
-    if (needsWebmFallback) {
-      // Safari/iOS: переключаем dual-plane canvas видео
-      if (safariActive) safariActive.pause();
-      if (s === 'idle' || s === 'listening') {
-        safariActive = safariVideos.idle;
-      } else if (s === 'greeting') {
-        safariActive = safariVideos.greeting;
-        safariActive.currentTime = 0;
-      } else if (s === 'talking') {
-        safariActive = safariVideos.talking;
-        safariActive.currentTime = 0;
-      }
-      safariActive.play().catch(() => {});
-      return;
-    }
-
-    // Chrome/Firefox: обычные WebM видео
+    // WebM видео — все платформы включая iOS 16+ и Safari
     [sIdle, sGreet, sTalk].forEach(el => {
       el.classList.remove('is-active');
       el.pause?.();
