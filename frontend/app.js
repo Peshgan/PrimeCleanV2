@@ -1605,11 +1605,20 @@ function initForm(PERF = 'high') {
     if (date) dateParts.push('Скидка: −5% (раннее бронирование)');
     const fullMessage = [message, ...dateParts].filter(Boolean).join(' | ');
 
+    // Extract agent_amount from raw comment (pattern: "NNN BYN" or "от NNN BYN")
+    const agentAmountMatch = message.match(/\d+\s*BYN/i);
+    const agent_amount = agentAmountMatch ? agentAmountMatch[0] : '';
+
     try {
       const res = await fetch(API_URL + '/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, phone, service, message: fullMessage, source: 'website-form' }),
+        body: JSON.stringify({
+          name, phone, service, message: fullMessage, source: 'website-form',
+          service_date: date || '',
+          service_time: time || '',
+          agent_amount,
+        }),
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
     } catch (err) {

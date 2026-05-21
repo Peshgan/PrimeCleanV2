@@ -8,6 +8,7 @@ fs.mkdirSync(dataDir, { recursive: true });
 const leadsFile    = path.join(dataDir, 'leads.json');
 const sessionsFile = path.join(dataDir, 'sessions.json');
 const abuseFile    = path.join(dataDir, 'abuse.json');
+const expensesFile = path.join(dataDir, 'expenses.json');
 
 function readJSON(file) {
   try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return []; }
@@ -19,7 +20,7 @@ function writeJSON(file, data) {
 
 // ── Existing functions ────────────────────────────────────────────────────────
 
-function saveLead({ name, phone, service, message, source, ip }) {
+function saveLead({ name, phone, service, message, source, ip, service_date, service_time, agent_amount }) {
   const leads = readJSON(leadsFile);
   const lead = {
     id: Date.now(),
@@ -31,6 +32,11 @@ function saveLead({ name, phone, service, message, source, ip }) {
     ip: ip || null,
     status: 'new',
     notes: '',
+    service_date: service_date || null,
+    service_time: service_time || null,
+    agent_amount: agent_amount || null,
+    actual_amount: null,
+    closed_at: null,
     created_at: new Date().toISOString(),
   };
   leads.push(lead);
@@ -64,21 +70,19 @@ function getSession(sessionId) {
 
 /**
  * getLeads — returns leads array sorted newest first, with optional filtering.
- * @param {object} opts
- * @param {string} [opts.search]   — matches name or phone (case-insensitive)
- * @param {string} [opts.service]  — exact service filter
- * @param {string} [opts.source]   — exact source filter
- * @param {string} [opts.status]   — 'new'|'in_progress'|'done'|'cancelled'
- * @param {string} [opts.dateFrom] — ISO date string, inclusive
- * @param {string} [opts.dateTo]   — ISO date string, inclusive (end of day)
  */
 function getLeads({ search, service, source, status, dateFrom, dateTo } = {}) {
   let leads = readJSON(leadsFile);
 
-  // Ensure every lead has status/notes fields (migration for old records)
+  // Ensure every lead has required fields (migration for old records)
   leads = leads.map(l => ({
     status: 'new',
     notes: '',
+    service_date: null,
+    service_time: null,
+    agent_amount: null,
+    actual_amount: null,
+    closed_at: null,
     ...l,
   }));
 
@@ -108,7 +112,6 @@ function getLeads({ search, service, source, status, dateFrom, dateTo } = {}) {
   }
 
   if (dateTo) {
-    // inclusive: treat dateTo as end of that day
     const to = new Date(dateTo);
     to.setHours(23, 59, 59, 999);
     leads = leads.filter(l => new Date(l.created_at) <= to);
@@ -120,24 +123,56 @@ function getLeads({ search, service, source, status, dateFrom, dateTo } = {}) {
 }
 
 /**
- * updateLead — update status and/or notes for a lead by id.
- * @param {number|string} id
- * @param {object} fields  — { status?, notes? }
- * @returns {object|null}  — updated lead or null if not found
+ * updateLead — update all editable fields for a lead by id.
+ * When status changes to 'done', set closed_at (only if not already set).
+ * When status changes away from 'done', keep closed_at (history).
  */
-function updateLead(id, { status, notes } = {}) {
+function updateLead(id, fields = {}) {
   const leads = readJSON(leadsFile);
   const numId = Number(id);
   const idx = leads.findIndex(l => l.id === numId);
   if (idx === -1) return null;
 
+  const { status, notes, name, phone, service, message, service_date, service_time, agent_amount, actual_amount } = fields;
+
   const VALID_STATUSES = ['new', 'in_progress', 'done', 'cancelled'];
+
   if (status !== undefined && VALID_STATUSES.includes(status)) {
+    const prev = leads[idx].status;
     leads[idx].status = status;
+    // Set closed_at only when transitioning TO done for the first time
+    if (status === 'done' && !leads[idx].closed_at) {
+      leads[idx].closed_at = new Date().toISOString();
+    }
   }
   if (notes !== undefined) {
     leads[idx].notes = String(notes);
   }
+  if (name !== undefined) {
+    leads[idx].name = String(name);
+  }
+  if (phone !== undefined) {
+    leads[idx].phone = String(phone);
+  }
+  if (service !== undefined) {
+    leads[idx].service = String(service);
+  }
+  if (message !== undefined) {
+    leads[idx].message = String(message);
+  }
+  if (service_date !== undefined) {
+    leads[idx].service_date = service_date || null;
+  }
+  if (service_time !== undefined) {
+    leads[idx].service_time = service_time || null;
+  }
+  if (agent_amount !== undefined) {
+    leads[idx].agent_amount = agent_amount || null;
+  }
+  if (actual_amount !== undefined) {
+    leads[idx].actual_amount = actual_amount === '' || actual_amount === null ? null : parseFloat(actual_amount) || 0;
+  }
+
   leads[idx].updated_at = new Date().toISOString();
 
   writeJSON(leadsFile, leads);
@@ -146,8 +181,6 @@ function updateLead(id, { status, notes } = {}) {
 
 /**
  * deleteLead — remove a lead by id.
- * @param {number|string} id
- * @returns {boolean} — true if deleted, false if not found
  */
 function deleteLead(id) {
   const leads = readJSON(leadsFile);
@@ -161,7 +194,6 @@ function deleteLead(id) {
 
 /**
  * getStats — aggregate stats across all leads.
- * @returns {object}
  */
 function getStats() {
   const allLeads = readJSON(leadsFile).map(l => ({
@@ -204,7 +236,7 @@ function getStats() {
     .slice(0, 5)
     .map(([name, count]) => ({ name, count, pct: total ? Math.round(count / total * 100) : 0 }));
 
-  // Daily counts — last 14 days (index 0 = 13 days ago, index 13 = today)
+  // Daily counts — last 14 days
   const daily = [];
   for (let i = 13; i >= 0; i--) {
     const dayStart = new Date(today); dayStart.setDate(today.getDate() - i);
@@ -224,11 +256,6 @@ function getStats() {
 
 /**
  * logAbuse — record a profanity/abuse event.
- * @param {object} opts
- * @param {string} opts.ip
- * @param {string} [opts.session_id]
- * @param {string} opts.source      — 'chat' | 'form'
- * @param {string} opts.message_preview
  */
 function logAbuse({ ip, session_id, source, message_preview }) {
   const log = readJSON(abuseFile);
@@ -245,10 +272,6 @@ function logAbuse({ ip, session_id, source, message_preview }) {
 
 /**
  * getAbuseLog — returns abuse events, newest first, with per-IP summary.
- * @param {object} [opts]
- * @param {string} [opts.dateFrom]
- * @param {string} [opts.dateTo]
- * @param {string} [opts.ip]       — filter by specific IP
  */
 function getAbuseLog({ dateFrom, dateTo, ip } = {}) {
   let events = readJSON(abuseFile);
@@ -301,11 +324,6 @@ function getAbuseLog({ dateFrom, dateTo, ip } = {}) {
 
 /**
  * getSessions — returns all AI chat sessions with metadata, newest first.
- * @param {object} opts
- * @param {string} [opts.dateFrom]   — ISO date, inclusive
- * @param {string} [opts.dateTo]     — ISO date, inclusive (end of day)
- * @param {string} [opts.converted]  — 'true' | 'false' | undefined
- * @param {string} [opts.search]     — search in first user message
  */
 function getSessions({ dateFrom, dateTo, converted, search } = {}) {
   let sessions = readJSON(sessionsFile);
@@ -316,7 +334,6 @@ function getSessions({ dateFrom, dateTo, converted, search } = {}) {
     const asstMsgs = msgs.filter(m => m.role === 'assistant');
     const isConverted = asstMsgs.some(m => typeof m.content === 'string' && m.content.includes('[FORM:'));
 
-    // Extract form data from [FORM:NAME|PHONE|SERVICE|COMMENT]
     let formData = null;
     for (const m of asstMsgs) {
       const match = typeof m.content === 'string' && m.content.match(/\[FORM:([^\]]+)\]/);
@@ -362,4 +379,144 @@ function getSessions({ dateFrom, dateTo, converted, search } = {}) {
   return sessions;
 }
 
-module.exports = { saveLead, saveSession, getSession, getLeads, updateLead, deleteLead, getStats, getSessions, logAbuse, getAbuseLog };
+// ── Expenses functions ────────────────────────────────────────────────────────
+
+/**
+ * saveExpense — create a new expense record.
+ */
+function saveExpense({ category, description, amount, date }) {
+  const expenses = readJSON(expensesFile);
+  const expense = {
+    id: Date.now(),
+    category: category || 'Прочее',
+    description: description || '',
+    amount: parseFloat(amount) || 0,
+    date: date || new Date().toISOString().slice(0, 10),
+    created_at: new Date().toISOString(),
+  };
+  expenses.push(expense);
+  writeJSON(expensesFile, expenses);
+  return expense;
+}
+
+/**
+ * updateExpense — update fields of an expense by id.
+ */
+function updateExpense(id, { category, description, amount, date } = {}) {
+  const expenses = readJSON(expensesFile);
+  const numId = Number(id);
+  const idx = expenses.findIndex(e => e.id === numId);
+  if (idx === -1) return null;
+
+  if (category !== undefined)    expenses[idx].category    = category;
+  if (description !== undefined) expenses[idx].description = description;
+  if (amount !== undefined)      expenses[idx].amount      = parseFloat(amount) || 0;
+  if (date !== undefined)        expenses[idx].date        = date;
+  expenses[idx].updated_at = new Date().toISOString();
+
+  writeJSON(expensesFile, expenses);
+  return expenses[idx];
+}
+
+/**
+ * deleteExpense — remove an expense by id.
+ */
+function deleteExpense(id) {
+  const expenses = readJSON(expensesFile);
+  const numId = Number(id);
+  const idx = expenses.findIndex(e => e.id === numId);
+  if (idx === -1) return false;
+  expenses.splice(idx, 1);
+  writeJSON(expensesFile, expenses);
+  return true;
+}
+
+/**
+ * getExpenses — returns filtered expenses sorted newest first.
+ */
+function getExpenses({ dateFrom, dateTo, category } = {}) {
+  let expenses = readJSON(expensesFile);
+
+  if (dateFrom) {
+    expenses = expenses.filter(e => e.date >= dateFrom);
+  }
+  if (dateTo) {
+    expenses = expenses.filter(e => e.date <= dateTo);
+  }
+  if (category) {
+    expenses = expenses.filter(e => e.category === category);
+  }
+
+  expenses.sort((a, b) => b.id - a.id);
+
+  const total = expenses.reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
+  return { expenses, total, count: expenses.length };
+}
+
+/**
+ * getRevenue — aggregate revenue from done leads with actual_amount > 0.
+ */
+function getRevenue({ dateFrom, dateTo } = {}) {
+  let leads = readJSON(leadsFile).map(l => ({
+    status: 'new',
+    actual_amount: null,
+    service_date: null,
+    closed_at: null,
+    created_at: l.created_at,
+    ...l,
+  }));
+
+  // Only done leads with actual_amount > 0
+  leads = leads.filter(l => l.status === 'done' && parseFloat(l.actual_amount) > 0);
+
+  // Determine revenue date per lead
+  leads = leads.map(l => ({
+    ...l,
+    _rev_date: l.service_date
+      ? l.service_date
+      : l.closed_at
+        ? l.closed_at.slice(0, 10)
+        : l.created_at.slice(0, 10),
+  }));
+
+  if (dateFrom) {
+    leads = leads.filter(l => l._rev_date >= dateFrom);
+  }
+  if (dateTo) {
+    leads = leads.filter(l => l._rev_date <= dateTo);
+  }
+
+  const total = leads.reduce((s, l) => s + (parseFloat(l.actual_amount) || 0), 0);
+  const count = leads.length;
+  const avgOrder = count > 0 ? total / count : 0;
+
+  // Daily breakdown
+  const dailyMap = {};
+  for (const l of leads) {
+    const d = l._rev_date;
+    if (!dailyMap[d]) dailyMap[d] = { date: d, amount: 0, count: 0 };
+    dailyMap[d].amount += parseFloat(l.actual_amount) || 0;
+    dailyMap[d].count++;
+  }
+  const daily = Object.values(dailyMap).sort((a, b) => a.date.localeCompare(b.date));
+
+  return { leads, total, count, avgOrder, daily };
+}
+
+module.exports = {
+  saveLead,
+  saveSession,
+  getSession,
+  getLeads,
+  updateLead,
+  deleteLead,
+  getStats,
+  getSessions,
+  logAbuse,
+  getAbuseLog,
+  saveExpense,
+  updateExpense,
+  deleteExpense,
+  getExpenses,
+  getRevenue,
+};

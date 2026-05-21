@@ -23,7 +23,7 @@ function getClientIP(req) {
 }
 
 router.post('/', leadsLimit, async (req, res) => {
-  const { name, phone, service, message, source } = req.body;
+  const { name, phone, service, message, source, service_date, service_time, agent_amount } = req.body;
   if (!phone || typeof phone !== 'string' || phone.length < 7) {
     return res.status(400).json({ error: 'valid phone required' });
   }
@@ -37,7 +37,7 @@ router.post('/', leadsLimit, async (req, res) => {
   }
 
   try {
-    saveLead({ name, phone, service, message, source, ip });
+    saveLead({ name, phone, service, message, source, ip, service_date, service_time, agent_amount });
     await notifyLead({ name, phone, service, message, source });
     res.json({ ok: true });
   } catch (err) {

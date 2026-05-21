@@ -2,1042 +2,328 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
 <title>PrimeClean Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* ── Reset & Base ─────────────────────────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-:root {
-  --bg:       #06080f;
-  --bg2:      #0b0f1a;
-  --card:     rgba(255,255,255,0.04);
-  --card-hov: rgba(255,255,255,0.07);
-  --border:   rgba(255,255,255,0.08);
-  --border2:  rgba(255,255,255,0.14);
-  --blue:     #1a6cff;
-  --blue-dim: rgba(26,108,255,0.18);
-  --cyan:     #00eaff;
-  --cyan-dim: rgba(0,234,255,0.15);
-  --orange:   #ff9500;
-  --green:    #34d399;
-  --red:      #ff4444;
-  --text:     #e8eaf0;
-  --text2:    #8890a8;
-  --text3:    #4a5270;
-  --radius:   12px;
-  --radius-sm: 8px;
-}
-
-html, body {
-  height: 100%;
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Inter', sans-serif;
-  font-size: 14px;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* ── Scrollbar ───────────────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
-
-/* ── Login Screen ────────────────────────────────────────────────────────── */
-#login-screen {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(26,108,255,0.12) 0%, transparent 70%), var(--bg);
-}
-
-.login-card {
-  width: 380px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 48px 40px;
-  backdrop-filter: blur(20px);
-  text-align: center;
-}
-
-.login-logo {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 32px;
-  letter-spacing: 3px;
-  background: linear-gradient(135deg, var(--blue), var(--cyan));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: 8px;
-}
-
-.login-sub {
-  color: var(--text2);
-  font-size: 13px;
-  margin-bottom: 36px;
-}
-
-.login-label {
-  display: block;
-  text-align: left;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text2);
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  margin-bottom: 8px;
-}
-
-.login-input {
-  width: 100%;
-  padding: 13px 16px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  font-size: 15px;
-  font-family: 'Inter', sans-serif;
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  margin-bottom: 20px;
-}
-
-.login-input:focus {
-  border-color: var(--blue);
-  box-shadow: 0 0 0 3px var(--blue-dim);
-}
-
-.login-btn {
-  width: 100%;
-  padding: 13px;
-  background: linear-gradient(135deg, var(--blue), #0d52cc);
-  border: none;
-  border-radius: var(--radius-sm);
-  color: #fff;
-  font-size: 15px;
-  font-weight: 600;
-  font-family: 'Inter', sans-serif;
-  cursor: pointer;
-  transition: opacity 0.2s, transform 0.1s;
-}
-
-.login-btn:hover { opacity: 0.9; }
-.login-btn:active { transform: scale(0.98); }
-
-.login-error {
-  margin-top: 14px;
-  color: var(--red);
-  font-size: 13px;
-  min-height: 18px;
-}
-
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  20%       { transform: translateX(-8px); }
-  40%       { transform: translateX(8px); }
-  60%       { transform: translateX(-5px); }
-  80%       { transform: translateX(5px); }
-}
-.shake { animation: shake 0.4s ease; }
-
-/* ── App Shell ───────────────────────────────────────────────────────────── */
-#app { display: none; flex-direction: column; min-height: 100vh; }
-#app.visible { display: flex; }
-
-/* ── Header ──────────────────────────────────────────────────────────────── */
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 28px;
-  height: 60px;
-  background: rgba(6,8,15,0.95);
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  backdrop-filter: blur(12px);
-}
-
-.header-brand {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 20px;
-  letter-spacing: 2px;
-  background: linear-gradient(135deg, var(--blue), var(--cyan));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.header-time {
-  color: var(--text2);
-  font-size: 13px;
-  font-variant-numeric: tabular-nums;
-}
-
-.logout-btn {
-  padding: 7px 16px;
-  background: rgba(255,68,68,0.12);
-  border: 1px solid rgba(255,68,68,0.25);
-  border-radius: var(--radius-sm);
-  color: var(--red);
-  font-size: 13px;
-  font-weight: 500;
-  font-family: 'Inter', sans-serif;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.logout-btn:hover { background: rgba(255,68,68,0.22); }
-
-/* ── Tabs ────────────────────────────────────────────────────────────────── */
-.tabs {
-  display: flex;
-  gap: 4px;
-  padding: 16px 28px 0;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg2);
-}
-
-.tab-btn {
-  padding: 10px 22px;
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  color: var(--text2);
-  font-size: 14px;
-  font-weight: 500;
-  font-family: 'Inter', sans-serif;
-  cursor: pointer;
-  transition: color 0.2s, border-color 0.2s;
-  margin-bottom: -1px;
-}
-.tab-btn:hover { color: var(--text); }
-.tab-btn.active { color: var(--cyan); border-bottom-color: var(--cyan); }
-
-/* ── Main Content ────────────────────────────────────────────────────────── */
-.main { flex: 1; padding: 28px; background: var(--bg); }
-
-.tab-panel { display: none; }
-.tab-panel.active { display: block; }
-
-/* ── Stat Cards ──────────────────────────────────────────────────────────── */
-.stat-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-@media (max-width: 900px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 500px) { .stat-grid { grid-template-columns: 1fr; } }
-
-.stat-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 22px 24px;
-  transition: background 0.2s;
-}
-.stat-card:hover { background: var(--card-hov); }
-
-.stat-num {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 52px;
-  line-height: 1;
-  background: linear-gradient(135deg, var(--blue), var(--cyan));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.stat-label {
-  margin-top: 6px;
-  color: var(--text2);
-  font-size: 13px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-}
-
-/* ── Dashboard Second Row ────────────────────────────────────────────────── */
-.dash-row {
-  display: grid;
-  grid-template-columns: 1.6fr 1fr;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-@media (max-width: 768px) { .dash-row { grid-template-columns: 1fr; } }
-
-.section-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 22px 24px;
-}
-
-.section-title {
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: var(--text2);
-  margin-bottom: 18px;
-}
-
-/* ── Bar Chart ───────────────────────────────────────────────────────────── */
-.bar-chart {
-  display: flex;
-  align-items: flex-end;
-  gap: 5px;
-  height: 90px;
-}
-
-.bar-wrap {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  height: 100%;
-  justify-content: flex-end;
-}
-
-.bar {
-  width: 100%;
-  min-height: 2px;
-  border-radius: 3px 3px 0 0;
-  background: linear-gradient(180deg, var(--cyan), var(--blue));
-  transition: height 0.4s cubic-bezier(0.34,1.56,0.64,1);
-  position: relative;
-}
-.bar:hover::after {
-  content: attr(data-val);
-  position: absolute;
-  top: -22px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--bg2);
-  border: 1px solid var(--border2);
-  border-radius: 4px;
-  padding: 2px 6px;
-  font-size: 11px;
-  color: var(--text);
-  white-space: nowrap;
-  pointer-events: none;
-}
-
-.bar-label {
-  font-size: 9px;
-  color: var(--text3);
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-}
-
-/* ── Status Pills ────────────────────────────────────────────────────────── */
-.status-pills {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.status-pill {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 14px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 500;
-  border: 1px solid;
-}
-.status-pill.new        { background: var(--cyan-dim); border-color: var(--cyan); color: var(--cyan); }
-.status-pill.in_progress{ background: rgba(255,149,0,.12); border-color: var(--orange); color: var(--orange); }
-.status-pill.done       { background: rgba(52,211,153,.12); border-color: var(--green); color: var(--green); }
-.status-pill.cancelled  { background: rgba(255,68,68,.10); border-color: var(--red); color: var(--red); }
-
-.pill-count { font-family: 'Bebas Neue', sans-serif; font-size: 18px; line-height: 1; }
-
-/* ── Source Badges ───────────────────────────────────────────────────────── */
-.source-list { display: flex; flex-direction: column; gap: 10px; }
-.source-row  { display: flex; align-items: center; justify-content: space-between; }
-
-.source-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-}
-.source-badge.website-form  { background: var(--blue-dim); color: var(--blue); }
-.source-badge.booking-widget{ background: rgba(139,92,246,.15); color: #a78bfa; }
-.source-badge.agent         { background: var(--cyan-dim); color: var(--cyan); }
-.source-badge.other         { background: rgba(255,255,255,.07); color: var(--text2); }
-
-.source-count { font-size: 14px; font-weight: 600; color: var(--text); }
-
-/* ── Top Services ────────────────────────────────────────────────────────── */
-.service-list { display: flex; flex-direction: column; gap: 12px; }
-.service-row  { display: flex; flex-direction: column; gap: 5px; }
-.service-meta { display: flex; justify-content: space-between; }
-.service-name { font-size: 13px; color: var(--text); }
-.service-pct  { font-size: 13px; color: var(--text2); }
-.service-bar-wrap { height: 4px; background: rgba(255,255,255,0.06); border-radius: 99px; overflow: hidden; }
-.service-bar  { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--blue), var(--cyan)); transition: width 0.6s ease; }
-
-/* ── Filter Bar ──────────────────────────────────────────────────────────── */
-.filter-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
-  padding: 16px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-
-.filter-input, .filter-select {
-  padding: 9px 13px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  font-size: 13px;
-  font-family: 'Inter', sans-serif;
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-.filter-input:focus, .filter-select:focus {
-  border-color: var(--blue);
-  box-shadow: 0 0 0 3px var(--blue-dim);
-}
-.filter-input { min-width: 200px; }
-.filter-select { appearance: none; cursor: pointer; padding-right: 28px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238890a8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
-.filter-select option { background: #0b0f1a; }
-
-input[type="date"].filter-input::-webkit-calendar-picker-indicator { filter: invert(0.5); }
-
-.reset-btn {
-  padding: 9px 16px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-sm);
-  color: var(--text2);
-  font-size: 13px;
-  font-family: 'Inter', sans-serif;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-  white-space: nowrap;
-}
-.reset-btn:hover { background: rgba(255,255,255,0.09); color: var(--text); }
-
-.results-count {
-  margin-bottom: 12px;
-  color: var(--text2);
-  font-size: 13px;
-}
-.results-count span { color: var(--text); font-weight: 600; }
-
-/* ── Table ───────────────────────────────────────────────────────────────── */
-.table-wrap {
-  overflow-x: auto;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--card);
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 900px;
-}
-
-thead th {
-  padding: 13px 16px;
-  text-align: left;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.7px;
-  color: var(--text2);
-  border-bottom: 1px solid var(--border);
-  white-space: nowrap;
-  background: rgba(255,255,255,0.02);
-}
-
-tbody tr {
-  border-bottom: 1px solid var(--border);
-  transition: background 0.15s;
-}
-tbody tr:last-child { border-bottom: none; }
-tbody tr:hover { background: rgba(255,255,255,0.025); }
-
-tbody td {
-  padding: 13px 16px;
-  vertical-align: middle;
-  font-size: 13px;
-}
-
-.td-date { color: var(--text2); white-space: nowrap; }
-.td-name { font-weight: 500; }
-.td-phone a { color: var(--cyan); text-decoration: none; }
-.td-phone a:hover { text-decoration: underline; }
-.td-service { color: var(--text2); max-width: 140px; }
-.td-note { color: var(--text2); max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.td-actions { white-space: nowrap; }
-
-/* ── Status Select in Table ──────────────────────────────────────────────── */
-.status-select {
-  appearance: none;
-  border: none;
-  border-radius: 999px;
-  padding: 5px 26px 5px 10px;
-  font-size: 12px;
-  font-weight: 600;
-  font-family: 'Inter', sans-serif;
-  cursor: pointer;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='currentColor' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 8px center;
-  outline: none;
-  transition: opacity 0.2s;
-}
-.status-select:hover { opacity: 0.85; }
-
-.status-select.new         { background-color: var(--cyan-dim); color: var(--cyan); }
-.status-select.in_progress { background-color: rgba(255,149,0,.15); color: var(--orange); }
-.status-select.done        { background-color: rgba(52,211,153,.12); color: var(--green); }
-.status-select.cancelled   { background-color: rgba(255,68,68,.12); color: var(--red); }
-.status-select option      { background: #0b0f1a; color: var(--text); }
-
-/* ── Action Buttons ──────────────────────────────────────────────────────── */
-.btn-icon {
-  width: 32px;
-  height: 32px;
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-sm);
-  background: rgba(255,255,255,0.04);
-  color: var(--text2);
-  font-size: 15px;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: 4px;
-}
-.btn-icon:hover { background: rgba(255,255,255,0.09); color: var(--text); border-color: var(--border2); }
-.btn-icon.del:hover { background: rgba(255,68,68,.15); color: var(--red); border-color: rgba(255,68,68,.3); }
-
-/* ── Empty State ─────────────────────────────────────────────────────────── */
-.empty-state {
-  padding: 60px 20px;
-  text-align: center;
-  color: var(--text2);
-}
-.empty-icon { font-size: 48px; margin-bottom: 16px; }
-.empty-title { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
-.empty-sub { font-size: 13px; }
-
-/* ── Pagination ──────────────────────────────────────────────────────────── */
-.pagination {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  margin-top: 20px;
-}
-.page-btn {
-  min-width: 34px;
-  height: 34px;
-  padding: 0 10px;
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-sm);
-  background: var(--card);
-  color: var(--text2);
-  font-size: 13px;
-  font-family: 'Inter', sans-serif;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-}
-.page-btn:hover { background: var(--card-hov); color: var(--text); }
-.page-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
-.page-btn:disabled { opacity: 0.35; cursor: default; }
-
-/* ── Modal ───────────────────────────────────────────────────────────────── */
-.modal-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(6,8,15,0.85);
-  z-index: 200;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(4px);
-}
-.modal-overlay.open { display: flex; }
-
-.modal {
-  width: 520px;
-  max-width: calc(100vw - 32px);
-  background: var(--bg2);
-  border: 1px solid var(--border2);
-  border-radius: 16px;
-  padding: 32px;
-  position: relative;
-  animation: modalIn 0.2s ease;
-}
-@keyframes modalIn { from { opacity:0; transform: scale(0.96) translateY(8px); } to { opacity:1; transform: none; } }
-
-.modal-close {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  width: 30px; height: 30px;
-  border: none;
-  background: rgba(255,255,255,0.06);
-  color: var(--text2);
-  font-size: 18px;
-  border-radius: 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s;
-}
-.modal-close:hover { background: rgba(255,255,255,0.12); color: var(--text); }
-
-.modal-title {
-  font-size: 18px;
-  font-weight: 700;
-  margin-bottom: 24px;
-}
-
-.modal-fields {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  margin-bottom: 20px;
-}
-@media (max-width: 480px) { .modal-fields { grid-template-columns: 1fr; } }
-
-.modal-field { display: flex; flex-direction: column; gap: 6px; }
-.modal-field.full { grid-column: 1/-1; }
-.modal-field-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text2); }
-.modal-field-val { font-size: 14px; color: var(--text); padding: 10px 13px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: var(--radius-sm); }
-.modal-field-val.link { color: var(--cyan); }
-
-.modal-select, .modal-textarea {
-  padding: 10px 13px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  font-size: 14px;
-  font-family: 'Inter', sans-serif;
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-.modal-select:focus, .modal-textarea:focus {
-  border-color: var(--blue);
-  box-shadow: 0 0 0 3px var(--blue-dim);
-}
-.modal-select { appearance: none; cursor: pointer; }
-.modal-select option { background: #0b0f1a; }
-.modal-textarea { resize: vertical; min-height: 90px; }
-
-.modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
-
-.btn-primary {
-  padding: 10px 24px;
-  background: linear-gradient(135deg, var(--blue), #0d52cc);
-  border: none;
-  border-radius: var(--radius-sm);
-  color: #fff;
-  font-size: 14px;
-  font-weight: 600;
-  font-family: 'Inter', sans-serif;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-.btn-primary:hover { opacity: 0.9; }
-
-.btn-secondary {
-  padding: 10px 24px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  font-size: 14px;
-  font-weight: 500;
-  font-family: 'Inter', sans-serif;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.btn-secondary:hover { background: rgba(255,255,255,0.1); }
-
-/* ── Toast ───────────────────────────────────────────────────────────────── */
-#toast {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 999;
-  padding: 12px 20px;
-  background: #1a2035;
-  border: 1px solid var(--border2);
-  border-radius: 10px;
-  font-size: 14px;
-  color: var(--text);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-  opacity: 0;
-  transform: translateY(8px);
-  transition: opacity 0.25s, transform 0.25s;
-  pointer-events: none;
-}
-#toast.show { opacity: 1; transform: none; }
-#toast.success { border-color: var(--green); }
-#toast.error   { border-color: var(--red); }
-
-/* ── Loading spinner ─────────────────────────────────────────────────────── */
-.spinner {
-  width: 20px; height: 20px;
-  border: 2px solid var(--border2);
-  border-top-color: var(--blue);
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-  display: inline-block;
-  vertical-align: middle;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* ── Sessions Tab ────────────────────────────────────────────────────────── */
-.sess-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 24px;
-}
-@media (max-width: 600px) { .sess-stats { grid-template-columns: 1fr; } }
-
-.sess-card-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.sess-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px 20px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  transition: background 0.15s, border-color 0.15s;
-  cursor: pointer;
-}
-.sess-card:hover { background: var(--card-hov); border-color: var(--border2); }
-.sess-card.converted { border-left: 3px solid var(--green); }
-.sess-card.dropped   { border-left: 3px solid var(--border2); }
-
-.sess-avatar {
-  width: 40px; height: 40px;
-  border-radius: 50%;
-  background: var(--blue-dim);
-  border: 1px solid var(--border2);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px;
-  flex-shrink: 0;
-}
-
-.sess-body { flex: 1; min-width: 0; }
-
-.sess-preview {
-  font-size: 14px;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-bottom: 6px;
-}
-
-.sess-meta {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.sess-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 3px 9px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 600;
-}
-.sess-badge.converted { background: rgba(52,211,153,.14); color: var(--green); border: 1px solid rgba(52,211,153,.3); }
-.sess-badge.dropped   { background: rgba(255,255,255,.05); color: var(--text3); border: 1px solid var(--border); }
-
-.sess-msg-count {
-  font-size: 12px;
-  color: var(--text2);
-}
-
-.sess-date {
-  font-size: 12px;
-  color: var(--text3);
-  margin-left: auto;
-  white-space: nowrap;
-}
-
-.sess-open-btn {
-  padding: 7px 14px;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-sm);
-  color: var(--text2);
-  font-size: 12px;
-  font-weight: 500;
-  font-family: 'Inter', sans-serif;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.2s, color 0.2s;
-  flex-shrink: 0;
-}
-.sess-open-btn:hover { background: var(--blue-dim); color: var(--blue); border-color: var(--blue); }
-
-/* ── Chat Viewer Modal ───────────────────────────────────────────────────── */
-#chat-modal-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(6,8,15,0.88);
-  z-index: 300;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(6px);
-  padding: 20px;
-}
-#chat-modal-overlay.open { display: flex; }
-
-.chat-modal {
-  width: 660px;
-  max-width: 100%;
-  max-height: calc(100vh - 40px);
-  background: var(--bg2);
-  border: 1px solid var(--border2);
-  border-radius: 20px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  animation: modalIn 0.22s ease;
-}
-
-.chat-modal-header {
-  padding: 18px 24px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-shrink: 0;
-}
-.chat-modal-title {
-  font-size: 15px;
-  font-weight: 600;
-  flex: 1;
-}
-.chat-modal-sub {
-  font-size: 12px;
-  color: var(--text2);
-  margin-top: 2px;
-}
-.chat-modal-close {
-  width: 30px; height: 30px;
-  border: none;
-  background: rgba(255,255,255,0.06);
-  color: var(--text2);
-  font-size: 18px;
-  border-radius: 8px;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: background 0.2s;
-  flex-shrink: 0;
-}
-.chat-modal-close:hover { background: rgba(255,255,255,0.12); color: var(--text); }
-
-.chat-form-banner {
-  margin: 0 16px;
-  padding: 10px 16px;
-  background: rgba(52,211,153,0.1);
-  border: 1px solid rgba(52,211,153,0.3);
-  border-radius: var(--radius-sm);
-  font-size: 13px;
-  color: var(--green);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.chat-messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.chat-bubble {
-  max-width: 82%;
-  padding: 10px 14px;
-  border-radius: 16px;
-  font-size: 13px;
-  line-height: 1.55;
-  word-break: break-word;
-}
-.chat-bubble.user {
-  align-self: flex-end;
-  background: rgba(26,108,255,0.18);
-  border: 1px solid rgba(26,108,255,0.35);
-  color: var(--text);
-  border-bottom-right-radius: 4px;
-}
-.chat-bubble.assistant {
-  align-self: flex-start;
-  background: rgba(0,234,255,0.08);
-  border: 1px solid rgba(0,234,255,0.2);
-  color: var(--text);
-  border-bottom-left-radius: 4px;
-}
-.chat-bubble-meta {
-  font-size: 11px;
-  color: var(--text3);
-  margin-top: 3px;
-  text-align: right;
-}
-.chat-bubble.assistant .chat-bubble-meta { text-align: left; }
-
-/* ── Abuse Tab ───────────────────────────────────────────────────────────── */
-.abuse-stat-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 24px;
-}
-@media (max-width: 600px) { .abuse-stat-grid { grid-template-columns: 1fr; } }
-
-.abuse-ip-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--red);
-  border-radius: var(--radius);
-  padding: 16px 20px;
-  margin-bottom: 10px;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.abuse-ip-card:hover { background: var(--card-hov); }
-
-.abuse-ip-header {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-bottom: 10px;
-}
-
-.abuse-ip-addr {
-  font-family: 'Courier New', monospace;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text);
-  background: rgba(255,68,68,0.1);
-  border: 1px solid rgba(255,68,68,0.25);
-  border-radius: 6px;
-  padding: 4px 10px;
-}
-
-.abuse-count-badge {
-  background: rgba(255,68,68,0.15);
-  border: 1px solid rgba(255,68,68,0.3);
-  color: var(--red);
-  border-radius: 999px;
-  padding: 3px 10px;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.abuse-source-badge {
-  padding: 3px 9px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 600;
-}
-.abuse-source-badge.chat { background: var(--cyan-dim); color: var(--cyan); }
-.abuse-source-badge.form { background: var(--blue-dim); color: var(--blue); }
-.abuse-source-badge.both { background: rgba(255,149,0,.12); color: var(--orange); }
-
-.abuse-dates {
-  font-size: 12px;
-  color: var(--text3);
-  margin-left: auto;
-}
-
-.abuse-messages {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.abuse-msg-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 8px 12px;
-  background: rgba(255,68,68,0.06);
-  border-radius: var(--radius-sm);
-  font-size: 12px;
-}
-
-.abuse-msg-src {
-  flex-shrink: 0;
-  font-weight: 600;
-  color: var(--text2);
-  min-width: 36px;
-}
-
-.abuse-msg-text {
-  color: var(--text);
-  word-break: break-word;
-  flex: 1;
-}
-
-.abuse-msg-time {
-  flex-shrink: 0;
-  color: var(--text3);
-  white-space: nowrap;
-}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#06080f;--bg2:#0b0f1a;
+  --card:rgba(255,255,255,0.04);--card-hov:rgba(255,255,255,0.07);
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
+  --blue:#1a6cff;--blue-dim:rgba(26,108,255,0.18);
+  --cyan:#00eaff;--cyan-dim:rgba(0,234,255,0.15);
+  --orange:#ff9500;--green:#34d399;--red:#ff4444;
+  --purple:#a78bfa;
+  --text:#e8eaf0;--text2:#8890a8;--text3:#4a5270;
+  --radius:12px;--radius-sm:8px;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;padding-bottom:env(safe-area-inset-bottom)}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+
+/* Login */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(26,108,255,0.12) 0%,transparent 70%),var(--bg)}
+.login-card{width:380px;max-width:calc(100vw - 32px);background:var(--card);border:1px solid var(--border);border-radius:20px;padding:48px 40px;backdrop-filter:blur(20px);text-align:center}
+.login-logo{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:3px;background:linear-gradient(135deg,var(--blue),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px}
+.login-sub{color:var(--text2);font-size:13px;margin-bottom:36px}
+.login-label{display:block;text-align:left;font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+.login-input{width:100%;padding:13px 16px;background:rgba(255,255,255,0.05);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-size:16px;font-family:'Inter',sans-serif;outline:none;transition:border-color .2s,box-shadow .2s;margin-bottom:20px;-webkit-appearance:none}
+.login-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-dim)}
+.login-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--blue),#0d52cc);border:none;border-radius:var(--radius-sm);color:#fff;font-size:15px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;transition:opacity .2s,transform .1s;min-height:44px;touch-action:manipulation}
+.login-btn:hover{opacity:.9}.login-btn:active{transform:scale(.98)}
+.login-error{margin-top:14px;color:var(--red);font-size:13px;min-height:18px}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.shake{animation:shake .4s ease}
+
+/* App Shell */
+#app{display:none;flex-direction:column;min-height:100vh}
+#app.visible{display:flex}
+
+/* Header */
+.header{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:56px;background:rgba(6,8,15,.95);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px)}
+.header-brand{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;background:linear-gradient(135deg,var(--blue),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.header-right{display:flex;align-items:center;gap:14px}
+.header-time{color:var(--text2);font-size:12px;font-variant-numeric:tabular-nums}
+@media(max-width:480px){.header-time{display:none}}
+.logout-btn{padding:7px 14px;background:rgba(255,68,68,.12);border:1px solid rgba(255,68,68,.25);border-radius:var(--radius-sm);color:var(--red);font-size:13px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;transition:background .2s;min-height:44px;touch-action:manipulation}
+.logout-btn:hover{background:rgba(255,68,68,.22)}
+
+/* Tabs */
+.tabs{display:flex;gap:2px;padding:12px 20px 0;border-bottom:1px solid var(--border);background:var(--bg2);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab-btn{padding:10px 18px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text2);font-size:13px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;transition:color .2s,border-color .2s;margin-bottom:-1px;white-space:nowrap;min-height:44px;touch-action:manipulation;flex-shrink:0}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--cyan);border-bottom-color:var(--cyan)}
+
+/* Main */
+.main{flex:1;padding:20px;background:var(--bg)}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* Stat Grid */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+@media(max-width:900px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:500px){.stat-grid{grid-template-columns:1fr 1fr}}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;transition:background .2s}
+.stat-card:hover{background:var(--card-hov)}
+.stat-num{font-family:'Bebas Neue',sans-serif;font-size:46px;line-height:1;background:linear-gradient(135deg,var(--blue),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-label{margin-top:5px;color:var(--text2);font-size:12px;font-weight:500;text-transform:uppercase;letter-spacing:.6px}
+
+/* Financial Block */
+.fin-block{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px}
+.fin-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);margin-bottom:14px}
+.period-btns{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.period-btn{padding:6px 14px;background:rgba(255,255,255,.05);border:1px solid var(--border2);border-radius:999px;color:var(--text2);font-size:12px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;transition:all .2s;min-height:36px;touch-action:manipulation;white-space:nowrap}
+.period-btn:hover{background:rgba(255,255,255,.09);color:var(--text)}
+.period-btn.active{background:var(--blue-dim);border-color:var(--blue);color:var(--blue)}
+.custom-range{display:none;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.custom-range.show{display:flex}
+.fin-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+@media(max-width:600px){.fin-cards{grid-template-columns:1fr}}
+.fin-card{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px 18px}
+.fin-card-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--text2);margin-bottom:8px}
+.fin-card-val{font-family:'Bebas Neue',sans-serif;font-size:36px;line-height:1;color:var(--text)}
+.fin-chart-wrap{height:110px;overflow:hidden}
+#fin-chart{display:flex;align-items:flex-end;gap:3px;height:100%}
+.fin-bar-group{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;height:100%;justify-content:flex-end}
+.fin-bars{display:flex;align-items:flex-end;gap:1px;width:100%;height:100px}
+.fin-bar{width:50%;min-height:2px;border-radius:2px 2px 0 0;transition:height .4s ease;cursor:pointer}
+.fin-bar.rev{background:linear-gradient(180deg,var(--cyan),var(--blue))}
+.fin-bar.exp{background:linear-gradient(180deg,rgba(255,68,68,.8),rgba(255,68,68,.4))}
+.fin-chart-legend{display:flex;gap:12px;margin-top:8px;font-size:11px;color:var(--text2)}
+.fin-chart-legend span{display:flex;align-items:center;gap:4px}
+.fin-chart-legend span::before{content:'';display:inline-block;width:10px;height:10px;border-radius:2px}
+.fin-chart-legend .leg-rev::before{background:var(--cyan)}
+.fin-chart-legend .leg-exp::before{background:var(--red)}
+
+/* Dashboard second row */
+.dash-row{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;margin-bottom:20px}
+@media(max-width:768px){.dash-row{grid-template-columns:1fr}}
+.section-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px}
+.section-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);margin-bottom:16px}
+
+/* Bar chart */
+.bar-chart{display:flex;align-items:flex-end;gap:4px;height:80px}
+.bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;height:100%;justify-content:flex-end}
+.bar{width:100%;min-height:2px;border-radius:3px 3px 0 0;background:linear-gradient(180deg,var(--cyan),var(--blue));transition:height .4s cubic-bezier(.34,1.56,.64,1);position:relative}
+.bar:hover::after{content:attr(data-val);position:absolute;top:-22px;left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--border2);border-radius:4px;padding:2px 6px;font-size:11px;color:var(--text);white-space:nowrap;pointer-events:none}
+.bar-label{font-size:9px;color:var(--text3);white-space:nowrap;font-variant-numeric:tabular-nums}
+
+/* Status Pills */
+.status-pills{display:flex;gap:8px;flex-wrap:wrap}
+.status-pill{display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;font-size:12px;font-weight:500;border:1px solid}
+.status-pill.new{background:var(--cyan-dim);border-color:var(--cyan);color:var(--cyan)}
+.status-pill.in_progress{background:rgba(255,149,0,.12);border-color:var(--orange);color:var(--orange)}
+.status-pill.done{background:rgba(52,211,153,.12);border-color:var(--green);color:var(--green)}
+.status-pill.cancelled{background:rgba(255,68,68,.10);border-color:var(--red);color:var(--red)}
+.pill-count{font-family:'Bebas Neue',sans-serif;font-size:17px;line-height:1}
+
+/* Source / Service */
+.source-list{display:flex;flex-direction:column;gap:8px}
+.source-row{display:flex;align-items:center;justify-content:space-between}
+.source-badge{display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:600}
+.source-badge.website-form{background:var(--blue-dim);color:var(--blue)}
+.source-badge.booking-widget{background:rgba(139,92,246,.15);color:#a78bfa}
+.source-badge.agent{background:var(--cyan-dim);color:var(--cyan)}
+.source-badge.other{background:rgba(255,255,255,.07);color:var(--text2)}
+.source-count{font-size:14px;font-weight:600;color:var(--text)}
+.service-list{display:flex;flex-direction:column;gap:10px}
+.service-row{display:flex;flex-direction:column;gap:4px}
+.service-meta{display:flex;justify-content:space-between}
+.service-name{font-size:12px;color:var(--text)}
+.service-pct{font-size:12px;color:var(--text2)}
+.service-bar-wrap{height:4px;background:rgba(255,255,255,.06);border-radius:99px;overflow:hidden}
+.service-bar{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--blue),var(--cyan));transition:width .6s ease}
+
+/* Filter bar */
+.filter-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;padding:14px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius)}
+.filter-input,.filter-select{padding:9px 12px;background:rgba(255,255,255,.05);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-size:16px;font-family:'Inter',sans-serif;outline:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;min-height:44px}
+.filter-input:focus,.filter-select:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-dim)}
+.filter-input{min-width:160px}
+.filter-select{appearance:none;cursor:pointer;padding-right:28px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238890a8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.filter-select option{background:#0b0f1a}
+input[type="date"].filter-input::-webkit-calendar-picker-indicator{filter:invert(.5)}
+.reset-btn{padding:9px 14px;background:rgba(255,255,255,.05);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text2);font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;transition:background .2s,color .2s;white-space:nowrap;min-height:44px;touch-action:manipulation}
+.reset-btn:hover{background:rgba(255,255,255,.09);color:var(--text)}
+.results-count{margin-bottom:10px;color:var(--text2);font-size:13px}
+.results-count span{color:var(--text);font-weight:600}
+
+/* Table */
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;min-width:900px}
+thead th{padding:11px 13px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--text2);border-bottom:1px solid var(--border);white-space:nowrap;background:rgba(255,255,255,.02)}
+tbody tr{border-bottom:1px solid var(--border);transition:background .15s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:rgba(255,255,255,.025)}
+tbody td{padding:11px 13px;vertical-align:middle;font-size:13px}
+.td-date{color:var(--text2);white-space:nowrap}
+.td-name{font-weight:500}
+.td-phone a{color:var(--cyan);text-decoration:none}
+.td-phone a:hover{text-decoration:underline}
+.td-service{color:var(--text2);max-width:120px}
+.td-note{color:var(--text2);max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.td-actions{white-space:nowrap}
+
+/* Inline editing */
+.td-edit{cursor:text}
+.td-edit:hover{background:rgba(255,255,255,.04)}
+.td-edit.editing{background:rgba(26,108,255,.08)}
+.inline-edit-input{background:rgba(26,108,255,.15);border:1px solid var(--blue);border-radius:4px;color:var(--text);font-size:13px;font-family:'Inter',sans-serif;padding:4px 8px;width:100%;outline:none;-webkit-appearance:none;min-height:30px}
+.inline-edit-input[type=number]{width:90px}
+
+/* Status select */
+.status-select{appearance:none;border:none;border-radius:999px;padding:5px 26px 5px 10px;font-size:12px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='currentColor' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;outline:none;transition:opacity .2s;min-height:32px;touch-action:manipulation}
+.status-select:hover{opacity:.85}
+.status-select.new{background-color:var(--cyan-dim);color:var(--cyan)}
+.status-select.in_progress{background-color:rgba(255,149,0,.15);color:var(--orange)}
+.status-select.done{background-color:rgba(52,211,153,.12);color:var(--green)}
+.status-select.cancelled{background-color:rgba(255,68,68,.12);color:var(--red)}
+.status-select option{background:#0b0f1a;color:var(--text)}
+
+/* Buttons */
+.btn-icon{width:32px;height:32px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:rgba(255,255,255,.04);color:var(--text2);font-size:14px;cursor:pointer;transition:background .2s,color .2s,border-color .2s;display:inline-flex;align-items:center;justify-content:center;margin-left:3px;touch-action:manipulation}
+.btn-icon:hover{background:rgba(255,255,255,.09);color:var(--text)}
+.btn-icon.del:hover{background:rgba(255,68,68,.15);color:var(--red);border-color:rgba(255,68,68,.3)}
+.btn-primary{padding:10px 22px;background:linear-gradient(135deg,var(--blue),#0d52cc);border:none;border-radius:var(--radius-sm);color:#fff;font-size:14px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;transition:opacity .2s;min-height:44px;touch-action:manipulation}
+.btn-primary:hover{opacity:.9}
+.btn-secondary{padding:10px 22px;background:rgba(255,255,255,.06);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-size:14px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;transition:background .2s;min-height:44px;touch-action:manipulation}
+.btn-secondary:hover{background:rgba(255,255,255,.1)}
+
+/* Empty state */
+.empty-state{padding:50px 20px;text-align:center;color:var(--text2)}
+.empty-icon{font-size:40px;margin-bottom:14px}
+.empty-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px}
+.empty-sub{font-size:13px}
+
+/* Pagination */
+.pagination{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:16px;flex-wrap:wrap}
+.page-btn{min-width:34px;height:34px;padding:0 10px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--card);color:var(--text2);font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;transition:background .2s,color .2s;touch-action:manipulation}
+.page-btn:hover{background:var(--card-hov);color:var(--text)}
+.page-btn.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.page-btn:disabled{opacity:.35;cursor:default}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(6,8,15,.85);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:16px}
+.modal-overlay.open{display:flex}
+.modal{width:520px;max-width:100%;background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:28px;position:relative;animation:modalIn .2s ease;max-height:calc(100vh - 32px);overflow-y:auto;-webkit-overflow-scrolling:touch}
+@keyframes modalIn{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:none}}
+.modal-close{position:absolute;top:14px;right:14px;width:30px;height:30px;border:none;background:rgba(255,255,255,.06);color:var(--text2);font-size:17px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;touch-action:manipulation}
+.modal-close:hover{background:rgba(255,255,255,.12);color:var(--text)}
+.modal-title{font-size:17px;font-weight:700;margin-bottom:20px}
+.modal-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
+@media(max-width:480px){.modal-fields{grid-template-columns:1fr}}
+.modal-field{display:flex;flex-direction:column;gap:5px}
+.modal-field.full{grid-column:1/-1}
+.modal-field-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--text2)}
+.modal-field-val{font-size:13px;color:var(--text);padding:9px 12px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:var(--radius-sm)}
+.modal-field-val.link{color:var(--cyan)}
+.modal-select,.modal-textarea{padding:9px 12px;background:rgba(255,255,255,.05);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-size:16px;font-family:'Inter',sans-serif;outline:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;min-height:44px}
+.modal-select:focus,.modal-textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-dim)}
+.modal-select{appearance:none;cursor:pointer}
+.modal-select option{background:#0b0f1a}
+.modal-textarea{resize:vertical;min-height:80px;font-size:14px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end}
+
+/* Toast */
+#toast{position:fixed;bottom:24px;right:16px;z-index:999;padding:11px 18px;background:#1a2035;border:1px solid var(--border2);border-radius:10px;font-size:13px;color:var(--text);box-shadow:0 8px 32px rgba(0,0,0,.5);opacity:0;transform:translateY(8px);transition:opacity .25s,transform .25s;pointer-events:none;max-width:calc(100vw - 32px)}
+#toast.show{opacity:1;transform:none}
+#toast.success{border-color:var(--green)}
+#toast.error{border-color:var(--red)}
+
+/* Spinner */
+.spinner{width:18px;height:18px;border:2px solid var(--border2);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Sessions */
+.sess-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
+@media(max-width:600px){.sess-stats{grid-template-columns:1fr 1fr}}
+.sess-card-list{display:flex;flex-direction:column;gap:8px}
+.sess-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;display:flex;align-items:center;gap:12px;transition:background .15s,border-color .15s;cursor:pointer}
+.sess-card:hover{background:var(--card-hov);border-color:var(--border2)}
+.sess-card.converted{border-left:3px solid var(--green)}
+.sess-card.dropped{border-left:3px solid var(--border2)}
+.sess-avatar{width:38px;height:38px;border-radius:50%;background:var(--blue-dim);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.sess-body{flex:1;min-width:0}
+.sess-preview{font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:5px}
+.sess-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sess-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:600}
+.sess-badge.converted{background:rgba(52,211,153,.14);color:var(--green);border:1px solid rgba(52,211,153,.3)}
+.sess-badge.dropped{background:rgba(255,255,255,.05);color:var(--text3);border:1px solid var(--border)}
+.sess-msg-count{font-size:12px;color:var(--text2)}
+.sess-date{font-size:11px;color:var(--text3);margin-left:auto;white-space:nowrap}
+.sess-open-btn{padding:6px 12px;background:rgba(255,255,255,.05);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text2);font-size:12px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;white-space:nowrap;transition:background .2s,color .2s;flex-shrink:0;touch-action:manipulation;min-height:36px}
+.sess-open-btn:hover{background:var(--blue-dim);color:var(--blue);border-color:var(--blue)}
+
+/* Chat modal */
+#chat-modal-overlay{display:none;position:fixed;inset:0;background:rgba(6,8,15,.88);z-index:300;align-items:center;justify-content:center;backdrop-filter:blur(6px);padding:16px}
+#chat-modal-overlay.open{display:flex}
+.chat-modal{width:640px;max-width:100%;max-height:calc(100vh - 32px);background:var(--bg2);border:1px solid var(--border2);border-radius:18px;display:flex;flex-direction:column;overflow:hidden;animation:modalIn .22s ease}
+.chat-modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.chat-modal-title{font-size:14px;font-weight:600;flex:1}
+.chat-modal-sub{font-size:12px;color:var(--text2);margin-top:2px}
+.chat-modal-close{width:28px;height:28px;border:none;background:rgba(255,255,255,.06);color:var(--text2);font-size:16px;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;flex-shrink:0;touch-action:manipulation}
+.chat-modal-close:hover{background:rgba(255,255,255,.12);color:var(--text)}
+.chat-form-banner{margin:0 12px;padding:9px 14px;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);border-radius:var(--radius-sm);font-size:13px;color:var(--green);display:flex;align-items:center;gap:7px;flex-shrink:0}
+.chat-messages{flex:1;overflow-y:auto;padding:16px 12px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch}
+.chat-bubble{max-width:82%;padding:9px 13px;border-radius:14px;font-size:13px;line-height:1.55;word-break:break-word}
+.chat-bubble.user{align-self:flex-end;background:rgba(26,108,255,.18);border:1px solid rgba(26,108,255,.35);color:var(--text);border-bottom-right-radius:4px}
+.chat-bubble.assistant{align-self:flex-start;background:rgba(0,234,255,.08);border:1px solid rgba(0,234,255,.2);color:var(--text);border-bottom-left-radius:4px}
+.chat-bubble-meta{font-size:11px;color:var(--text3);margin-top:3px;text-align:right}
+.chat-bubble.assistant .chat-bubble-meta{text-align:left}
+
+/* Abuse */
+.abuse-stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
+@media(max-width:600px){.abuse-stat-grid{grid-template-columns:1fr}}
+.abuse-ip-card{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--red);border-radius:var(--radius);padding:14px 16px;margin-bottom:8px;cursor:pointer;transition:background .15s}
+.abuse-ip-card:hover{background:var(--card-hov)}
+.abuse-ip-header{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.abuse-ip-addr{font-family:'Courier New',monospace;font-size:13px;font-weight:700;color:var(--text);background:rgba(255,68,68,.1);border:1px solid rgba(255,68,68,.25);border-radius:6px;padding:3px 8px}
+.abuse-count-badge{background:rgba(255,68,68,.15);border:1px solid rgba(255,68,68,.3);color:var(--red);border-radius:999px;padding:3px 8px;font-size:12px;font-weight:700}
+.abuse-source-badge{padding:3px 8px;border-radius:999px;font-size:11px;font-weight:600}
+.abuse-source-badge.chat{background:var(--cyan-dim);color:var(--cyan)}
+.abuse-source-badge.form{background:var(--blue-dim);color:var(--blue)}
+.abuse-source-badge.both{background:rgba(255,149,0,.12);color:var(--orange)}
+.abuse-dates{font-size:11px;color:var(--text3);margin-left:auto}
+.abuse-messages{display:flex;flex-direction:column;gap:5px}
+.abuse-msg-row{display:flex;align-items:flex-start;gap:8px;padding:7px 10px;background:rgba(255,68,68,.06);border-radius:var(--radius-sm);font-size:12px}
+.abuse-msg-src{flex-shrink:0;font-weight:600;color:var(--text2);min-width:30px}
+.abuse-msg-text{color:var(--text);word-break:break-word;flex:1}
+.abuse-msg-time{flex-shrink:0;color:var(--text3);white-space:nowrap}
+
+/* Expenses tab */
+.exp-form-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:16px}
+.exp-form-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);margin-bottom:14px}
+.exp-form-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+.exp-form-field{display:flex;flex-direction:column;gap:5px}
+.exp-form-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text2)}
+.exp-form-input,.exp-form-select{padding:9px 12px;background:rgba(255,255,255,.05);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-size:16px;font-family:'Inter',sans-serif;outline:none;transition:border-color .2s;-webkit-appearance:none;min-height:44px}
+.exp-form-input:focus,.exp-form-select:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-dim)}
+.exp-form-select{appearance:none;cursor:pointer;padding-right:28px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238890a8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.exp-form-select option{background:#0b0f1a}
+.exp-add-btn{padding:9px 18px;background:linear-gradient(135deg,var(--blue),#0d52cc);border:none;border-radius:var(--radius-sm);color:#fff;font-size:14px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;transition:opacity .2s;min-height:44px;touch-action:manipulation;white-space:nowrap;align-self:flex-end}
+.exp-add-btn:hover{opacity:.9}
+.exp-summary{display:flex;gap:20px;padding:10px 14px;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:10px;font-size:13px}
+.exp-summary-val{font-weight:700;color:var(--red)}
+.exp-summary-count{color:var(--text2)}
+
+/* Category badges */
+.cat-badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600;border:1px solid}
+.cat-Химия{background:rgba(0,234,255,.12);color:var(--cyan);border-color:rgba(0,234,255,.3)}
+.cat-Транспорт{background:rgba(26,108,255,.15);color:var(--blue);border-color:rgba(26,108,255,.3)}
+.cat-Зарплата{background:rgba(255,149,0,.12);color:var(--orange);border-color:rgba(255,149,0,.3)}
+.cat-Инвентарь{background:rgba(167,139,250,.15);color:var(--purple);border-color:rgba(167,139,250,.3)}
+.cat-Реклама{background:rgba(52,211,153,.12);color:var(--green);border-color:rgba(52,211,153,.3)}
+.cat-Аренда{background:rgba(255,68,68,.12);color:var(--red);border-color:rgba(255,68,68,.3)}
+.cat-Прочее{background:rgba(255,255,255,.06);color:var(--text2);border-color:var(--border2)}
 </style>
 </head>
 <body>
 
-<!-- ── LOGIN SCREEN ──────────────────────────────────────────────────────────── -->
+<!-- LOGIN -->
 <div id="login-screen">
   <div class="login-card" id="login-card">
     <div class="login-logo">PrimeClean</div>
@@ -1049,9 +335,8 @@ tbody td {
   </div>
 </div>
 
-<!-- ── APP SHELL ─────────────────────────────────────────────────────────────── -->
+<!-- APP -->
 <div id="app">
-  <!-- Header -->
   <header class="header">
     <div class="header-brand">PrimeClean Admin</div>
     <div class="header-right">
@@ -1060,41 +345,68 @@ tbody td {
     </div>
   </header>
 
-  <!-- Tabs -->
   <nav class="tabs">
     <button class="tab-btn active" data-tab="dashboard">Дашборд</button>
     <button class="tab-btn" data-tab="leads">Заявки</button>
+    <button class="tab-btn" data-tab="expenses">Затраты</button>
     <button class="tab-btn" data-tab="sessions">Сессии AI</button>
     <button class="tab-btn" data-tab="abuse">Нарушители</button>
   </nav>
 
-  <!-- Main -->
   <main class="main">
 
-    <!-- ── DASHBOARD TAB ──────────────────────────────────────────────────── -->
+    <!-- DASHBOARD -->
     <div class="tab-panel active" id="tab-dashboard">
 
-      <!-- 4 stat cards -->
-      <div class="stat-grid">
-        <div class="stat-card">
-          <div class="stat-num" id="s-total">—</div>
-          <div class="stat-label">Всего заявок</div>
+      <!-- Financial block -->
+      <div class="fin-block">
+        <div class="fin-title">Финансовая аналитика</div>
+        <div class="period-btns">
+          <button class="period-btn active" data-period="today">Сегодня</button>
+          <button class="period-btn" data-period="7d">7 дней</button>
+          <button class="period-btn active-default" data-period="30d">30 дней</button>
+          <button class="period-btn" data-period="month">Этот месяц</button>
+          <button class="period-btn" data-period="prevmonth">Прошлый месяц</button>
+          <button class="period-btn" data-period="year">Год</button>
+          <button class="period-btn" data-period="custom">Своё</button>
         </div>
-        <div class="stat-card">
-          <div class="stat-num" id="s-today">—</div>
-          <div class="stat-label">Сегодня</div>
+        <div class="custom-range" id="custom-range">
+          <input class="filter-input" type="date" id="rev-from" style="min-width:auto;width:145px">
+          <span style="color:var(--text2);font-size:12px">—</span>
+          <input class="filter-input" type="date" id="rev-to" style="min-width:auto;width:145px">
+          <button class="reset-btn" onclick="loadRevenue()">Применить</button>
         </div>
-        <div class="stat-card">
-          <div class="stat-num" id="s-week">—</div>
-          <div class="stat-label">За 7 дней</div>
+        <div class="fin-cards">
+          <div class="fin-card">
+            <div class="fin-card-label">Доход (BYN)</div>
+            <div class="fin-card-val" id="fin-revenue">—</div>
+          </div>
+          <div class="fin-card">
+            <div class="fin-card-label">Затраты (BYN)</div>
+            <div class="fin-card-val" id="fin-expenses">—</div>
+          </div>
+          <div class="fin-card">
+            <div class="fin-card-label">Прибыль (BYN)</div>
+            <div class="fin-card-val" id="fin-profit">—</div>
+          </div>
         </div>
-        <div class="stat-card">
-          <div class="stat-num" id="s-month">—</div>
-          <div class="stat-label">За 30 дней</div>
+        <div class="fin-chart-wrap">
+          <div id="fin-chart"></div>
+        </div>
+        <div class="fin-chart-legend">
+          <span class="leg-rev">Доход</span>
+          <span class="leg-exp">Затраты</span>
         </div>
       </div>
 
-      <!-- Bar chart + status pills -->
+      <!-- Stat cards -->
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-num" id="s-total">—</div><div class="stat-label">Всего заявок</div></div>
+        <div class="stat-card"><div class="stat-num" id="s-today">—</div><div class="stat-label">Сегодня</div></div>
+        <div class="stat-card"><div class="stat-num" id="s-week">—</div><div class="stat-label">За 7 дней</div></div>
+        <div class="stat-card"><div class="stat-num" id="s-month">—</div><div class="stat-label">За 30 дней</div></div>
+      </div>
+
       <div class="dash-row">
         <div class="section-card">
           <div class="section-title">Активность — последние 14 дней</div>
@@ -1102,16 +414,15 @@ tbody td {
         </div>
         <div class="section-card">
           <div class="section-title">По статусам</div>
-          <div class="status-pills" id="status-pills">
-            <div class="status-pill new">        <span class="pill-count" id="st-new">0</span>Новые</div>
-            <div class="status-pill in_progress"> <span class="pill-count" id="st-inprog">0</span>В работе</div>
-            <div class="status-pill done">        <span class="pill-count" id="st-done">0</span>Выполнены</div>
-            <div class="status-pill cancelled">   <span class="pill-count" id="st-cancel">0</span>Отменены</div>
+          <div class="status-pills">
+            <div class="status-pill new"><span class="pill-count" id="st-new">0</span>Новые</div>
+            <div class="status-pill in_progress"><span class="pill-count" id="st-inprog">0</span>В работе</div>
+            <div class="status-pill done"><span class="pill-count" id="st-done">0</span>Выполнены</div>
+            <div class="status-pill cancelled"><span class="pill-count" id="st-cancel">0</span>Отменены</div>
           </div>
         </div>
       </div>
 
-      <!-- Top services + sources -->
       <div class="dash-row">
         <div class="section-card">
           <div class="section-title">Топ услуг</div>
@@ -1122,23 +433,17 @@ tbody td {
           <div class="source-list" id="by-source"></div>
         </div>
       </div>
+    </div><!-- /dashboard -->
 
-    </div><!-- /tab-dashboard -->
-
-    <!-- ── LEADS TAB ──────────────────────────────────────────────────────── -->
+    <!-- LEADS -->
     <div class="tab-panel" id="tab-leads">
-
-      <!-- Filters -->
       <div class="filter-bar">
-        <input class="filter-input" type="text"   id="f-search"  placeholder="Имя или телефон...">
+        <input class="filter-input" type="text" id="f-search" placeholder="Имя или телефон...">
         <select class="filter-select" id="f-service">
           <option value="">Все услуги</option>
-          <option value="Уборка квартиры">Уборка квартиры</option>
-          <option value="Уборка дома">Уборка дома</option>
-          <option value="Мытьё окон">Мытьё окон</option>
-          <option value="Химчистка мебели">Химчистка мебели</option>
-          <option value="Уборка после ремонта">Уборка после ремонта</option>
-          <option value="Генеральная уборка">Генеральная уборка</option>
+          <option>Уборка квартиры</option><option>Уборка дома</option>
+          <option>Мытьё окон</option><option>Химчистка мебели</option>
+          <option>Уборка после ремонта</option><option>Генеральная уборка</option>
         </select>
         <select class="filter-select" id="f-source">
           <option value="">Все источники</option>
@@ -1153,25 +458,26 @@ tbody td {
           <option value="done">Выполнены</option>
           <option value="cancelled">Отменены</option>
         </select>
-        <input class="filter-input" type="date" id="f-from" style="min-width:auto;width:150px">
-        <input class="filter-input" type="date" id="f-to"   style="min-width:auto;width:150px">
+        <input class="filter-input" type="date" id="f-from" style="min-width:auto;width:145px">
+        <input class="filter-input" type="date" id="f-to" style="min-width:auto;width:145px">
         <button class="reset-btn" id="f-reset">Сбросить</button>
       </div>
-
       <div class="results-count" id="results-count">Загрузка...</div>
-
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>Дата</th>
+              <th>Создана</th>
               <th>Имя</th>
               <th>Телефон</th>
               <th>Услуга</th>
+              <th>Дата услуги</th>
               <th>Источник</th>
+              <th>Агент ₽</th>
+              <th>Факт ₽</th>
               <th>Статус</th>
-              <th>Комментарий</th>
-              <th>Действия</th>
+              <th>Заметки</th>
+              <th>Удалить</th>
             </tr>
           </thead>
           <tbody id="leads-tbody"></tbody>
@@ -1182,133 +488,144 @@ tbody td {
           <div class="empty-sub">Попробуйте изменить фильтры или подождите первых обращений</div>
         </div>
       </div>
-
       <div class="pagination" id="pagination"></div>
+    </div><!-- /leads -->
 
-    </div><!-- /tab-leads -->
-
-    <!-- ── SESSIONS TAB ─────────────────────────────────────────────────── -->
-    <div class="tab-panel" id="tab-sessions">
-
-      <!-- Stat mini-cards -->
-      <div class="sess-stats">
-        <div class="stat-card">
-          <div class="stat-num" id="ss-total">—</div>
-          <div class="stat-label">Всего диалогов</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-num" id="ss-today">—</div>
-          <div class="stat-label">Сегодня</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-num" id="ss-conv">—</div>
-          <div class="stat-label">Конверсия в заявку</div>
+    <!-- EXPENSES -->
+    <div class="tab-panel" id="tab-expenses">
+      <div class="exp-form-card">
+        <div class="exp-form-title">Добавить затрату</div>
+        <div class="exp-form-row">
+          <div class="exp-form-field">
+            <label class="exp-form-label">Категория</label>
+            <select class="exp-form-select" id="exp-new-cat">
+              <option>Химия</option><option>Транспорт</option><option>Зарплата</option>
+              <option>Инвентарь</option><option>Реклама</option><option>Аренда</option><option>Прочее</option>
+            </select>
+          </div>
+          <div class="exp-form-field" style="flex:2;min-width:160px">
+            <label class="exp-form-label">Описание</label>
+            <input class="exp-form-input" type="text" id="exp-new-desc" placeholder="Что куплено...">
+          </div>
+          <div class="exp-form-field">
+            <label class="exp-form-label">Сумма (BYN)</label>
+            <input class="exp-form-input" type="number" id="exp-new-amount" placeholder="0.00" min="0" step="0.01" style="width:120px">
+          </div>
+          <div class="exp-form-field">
+            <label class="exp-form-label">Дата</label>
+            <input class="exp-form-input" type="date" id="exp-new-date" style="width:145px">
+          </div>
+          <button class="exp-add-btn" onclick="addExpense()">Добавить затрату</button>
         </div>
       </div>
 
-      <!-- Filters -->
-      <div class="filter-bar" style="margin-bottom:16px">
+      <div class="filter-bar">
+        <input class="filter-input" type="date" id="exp-from" style="min-width:auto;width:145px">
+        <input class="filter-input" type="date" id="exp-to" style="min-width:auto;width:145px">
+        <select class="filter-select" id="exp-cat-filter">
+          <option value="">Все категории</option>
+          <option>Химия</option><option>Транспорт</option><option>Зарплата</option>
+          <option>Инвентарь</option><option>Реклама</option><option>Аренда</option><option>Прочее</option>
+        </select>
+        <button class="reset-btn" id="exp-reset">Сбросить</button>
+      </div>
+
+      <div class="exp-summary">
+        <span>Итого: <span class="exp-summary-val" id="exp-total-display">0.00 BYN</span></span>
+        <span class="exp-summary-count" id="exp-count-display">0 записей</span>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Дата</th>
+              <th>Категория</th>
+              <th>Описание</th>
+              <th>Сумма (BYN)</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody id="exp-tbody"></tbody>
+        </table>
+        <div id="exp-empty" class="empty-state" style="display:none">
+          <div class="empty-icon">💰</div>
+          <div class="empty-title">Затрат нет</div>
+          <div class="empty-sub">Добавьте первую запись о расходах</div>
+        </div>
+      </div>
+    </div><!-- /expenses -->
+
+    <!-- SESSIONS -->
+    <div class="tab-panel" id="tab-sessions">
+      <div class="sess-stats">
+        <div class="stat-card"><div class="stat-num" id="ss-total">—</div><div class="stat-label">Всего диалогов</div></div>
+        <div class="stat-card"><div class="stat-num" id="ss-today">—</div><div class="stat-label">Сегодня</div></div>
+        <div class="stat-card"><div class="stat-num" id="ss-conv">—</div><div class="stat-label">Конверсия в заявку</div></div>
+      </div>
+      <div class="filter-bar" style="margin-bottom:14px">
         <input class="filter-input" type="text" id="ss-search" placeholder="Поиск по первому сообщению...">
         <select class="filter-select" id="ss-converted">
           <option value="">Все диалоги</option>
           <option value="true">Только конвертированные</option>
           <option value="false">Только незакрытые</option>
         </select>
-        <input class="filter-input" type="date" id="ss-from" style="min-width:auto;width:150px">
-        <input class="filter-input" type="date" id="ss-to"   style="min-width:auto;width:150px">
+        <input class="filter-input" type="date" id="ss-from" style="min-width:auto;width:145px">
+        <input class="filter-input" type="date" id="ss-to" style="min-width:auto;width:145px">
         <button class="reset-btn" id="ss-reset">Сбросить</button>
       </div>
-
       <div class="results-count" id="ss-count">Загрузка...</div>
-
       <div class="sess-card-list" id="sess-list"></div>
-
       <div id="sess-empty" class="empty-state" style="display:none">
         <div class="empty-icon">💬</div>
         <div class="empty-title">Диалогов пока нет</div>
         <div class="empty-sub">Сессии появятся когда клиенты начнут общаться с Алисой</div>
       </div>
+    </div><!-- /sessions -->
 
-    </div><!-- /tab-sessions -->
-
-    <!-- ── ABUSE TAB ────────────────────────────────────────────────────── -->
+    <!-- ABUSE -->
     <div class="tab-panel" id="tab-abuse">
-
       <div class="abuse-stat-grid">
-        <div class="stat-card">
-          <div class="stat-num" id="ab-total">—</div>
-          <div class="stat-label">Всего инцидентов</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-num" id="ab-ips">—</div>
-          <div class="stat-label">Уникальных IP</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-num" id="ab-today">—</div>
-          <div class="stat-label">Сегодня</div>
-        </div>
+        <div class="stat-card"><div class="stat-num" id="ab-total">—</div><div class="stat-label">Всего инцидентов</div></div>
+        <div class="stat-card"><div class="stat-num" id="ab-ips">—</div><div class="stat-label">Уникальных IP</div></div>
+        <div class="stat-card"><div class="stat-num" id="ab-today">—</div><div class="stat-label">Сегодня</div></div>
       </div>
-
-      <div class="filter-bar" style="margin-bottom:16px">
-        <input class="filter-input" type="date" id="ab-from" style="min-width:auto;width:150px">
-        <input class="filter-input" type="date" id="ab-to"   style="min-width:auto;width:150px">
+      <div class="filter-bar" style="margin-bottom:14px">
+        <input class="filter-input" type="date" id="ab-from" style="min-width:auto;width:145px">
+        <input class="filter-input" type="date" id="ab-to" style="min-width:auto;width:145px">
         <button class="reset-btn" id="ab-reset">Сбросить</button>
       </div>
-
       <div class="results-count" id="ab-count">Загрузка...</div>
-
       <div id="ab-list"></div>
-
       <div id="ab-empty" class="empty-state" style="display:none">
         <div class="empty-icon">😊</div>
         <div class="empty-title">Нарушителей нет</div>
         <div class="empty-sub">Матерщинников пока не поймали</div>
       </div>
-
-    </div><!-- /tab-abuse -->
+    </div><!-- /abuse -->
 
   </main>
-</div><!-- /app -->
+</div>
 
-<!-- ── EDIT MODAL ────────────────────────────────────────────────────────────── -->
+<!-- EDIT MODAL (kept for backward compat, not shown via button) -->
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal">
     <button class="modal-close" id="modal-close">✕</button>
     <div class="modal-title">Редактировать заявку</div>
     <div class="modal-fields">
-      <div class="modal-field">
-        <div class="modal-field-label">Имя</div>
-        <div class="modal-field-val" id="m-name"></div>
-      </div>
-      <div class="modal-field">
-        <div class="modal-field-label">Телефон</div>
-        <div class="modal-field-val link" id="m-phone"></div>
-      </div>
-      <div class="modal-field">
-        <div class="modal-field-label">Услуга</div>
-        <div class="modal-field-val" id="m-service"></div>
-      </div>
-      <div class="modal-field">
-        <div class="modal-field-label">Источник</div>
-        <div class="modal-field-val" id="m-source"></div>
-      </div>
-      <div class="modal-field">
-        <div class="modal-field-label">Дата заявки</div>
-        <div class="modal-field-val" id="m-date"></div>
-      </div>
+      <div class="modal-field"><div class="modal-field-label">Имя</div><div class="modal-field-val" id="m-name"></div></div>
+      <div class="modal-field"><div class="modal-field-label">Телефон</div><div class="modal-field-val link" id="m-phone"></div></div>
+      <div class="modal-field"><div class="modal-field-label">Услуга</div><div class="modal-field-val" id="m-service"></div></div>
+      <div class="modal-field"><div class="modal-field-label">Источник</div><div class="modal-field-val" id="m-source"></div></div>
+      <div class="modal-field"><div class="modal-field-label">Дата заявки</div><div class="modal-field-val" id="m-date"></div></div>
       <div class="modal-field">
         <div class="modal-field-label">Статус</div>
         <select class="modal-select" id="m-status">
-          <option value="new">Новая</option>
-          <option value="in_progress">В работе</option>
-          <option value="done">Выполнена</option>
-          <option value="cancelled">Отменена</option>
+          <option value="new">Новая</option><option value="in_progress">В работе</option>
+          <option value="done">Выполнена</option><option value="cancelled">Отменена</option>
         </select>
       </div>
-      <div class="modal-field full">
-        <div class="modal-field-label">Сообщение клиента</div>
-        <div class="modal-field-val" id="m-message" style="white-space:pre-wrap;"></div>
-      </div>
+      <div class="modal-field full"><div class="modal-field-label">Сообщение клиента</div><div class="modal-field-val" id="m-message" style="white-space:pre-wrap"></div></div>
       <div class="modal-field full">
         <div class="modal-field-label">Внутренний комментарий</div>
         <textarea class="modal-textarea" id="m-notes" placeholder="Заметки для внутреннего использования..."></textarea>
@@ -1321,7 +638,7 @@ tbody td {
   </div>
 </div>
 
-<!-- ── CHAT VIEWER MODAL ──────────────────────────────────────────────────────── -->
+<!-- CHAT VIEWER MODAL -->
 <div id="chat-modal-overlay">
   <div class="chat-modal">
     <div class="chat-modal-header">
@@ -1331,42 +648,46 @@ tbody td {
       </div>
       <button class="chat-modal-close" id="cm-close">✕</button>
     </div>
-    <div class="chat-form-banner" id="cm-banner" style="display:none">
-      ✅ <span id="cm-banner-text"></span>
-    </div>
+    <div class="chat-form-banner" id="cm-banner" style="display:none">✅ <span id="cm-banner-text"></span></div>
     <div class="chat-messages" id="cm-messages"></div>
   </div>
 </div>
 
-<!-- ── TOAST ─────────────────────────────────────────────────────────────────── -->
 <div id="toast"></div>
 
 <script>
 'use strict';
 
-const API_URL = 'https://primeclean-production-75e1.up.railway.app';
+const API_URL   = 'https://primeclean-production-75e1.up.railway.app';
 const TOKEN_KEY = 'pc_admin_token';
-const PAGE_SIZE  = 50;
+const PAGE_SIZE = 50;
 
-// ── State ─────────────────────────────────────────────────────────────────────
-let token        = localStorage.getItem(TOKEN_KEY) || '';
-let allLeads     = [];
-let filteredLeads = [];
-let currentPage  = 1;
-let editingId    = null;
-let dashRefreshTimer = null;
-let searchDebounce   = null;
+let token             = localStorage.getItem(TOKEN_KEY) || '';
+let allLeads          = [];
+let filteredLeads     = [];
+let currentPage       = 1;
+let editingId         = null;
+let dashRefreshTimer  = null;
+let searchDebounce    = null;
+let revPeriod         = 'today';
+let revFrom           = '';
+let revTo             = '';
+let allExpenses       = [];
+let allSessions       = [];
+let sessSearchDebounce = null;
+
+const EXPENSE_CATEGORIES = ['Химия','Транспорт','Зарплата','Инвентарь','Реклама','Аренда','Прочее'];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+function fmtBYN(n) {
+  return Number(n || 0).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
 
 function api(path, opts = {}) {
   return fetch(API_URL + path, {
     ...opts,
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + token,
-      ...(opts.headers || {}),
-    },
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, ...(opts.headers || {}) },
     body: opts.body ? JSON.stringify(opts.body) : undefined,
   }).then(r => r.json());
 }
@@ -1381,35 +702,29 @@ function showToast(msg, type = 'success') {
 
 function formatDate(iso) {
   const d = new Date(iso);
-  const day  = d.getDate();
   const months = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
-  const hh = String(d.getHours()).padStart(2,'0');
-  const mm = String(d.getMinutes()).padStart(2,'0');
-  return `${day} ${months[d.getMonth()]} ${hh}:${mm}`;
+  return `${d.getDate()} ${months[d.getMonth()]} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
 
-const STATUS_LABELS  = { new:'Новая', in_progress:'В работе', done:'Выполнена', cancelled:'Отменена' };
-const SOURCE_LABELS  = { 'website-form':'Форма', 'booking-widget':'Бронирование', agent:'Агент' };
-const SOURCE_CLASS   = { 'website-form':'website-form', 'booking-widget':'booking-widget', agent:'agent' };
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+const SOURCE_LABELS = { 'website-form':'Форма', 'booking-widget':'Бронирование', agent:'Агент' };
+const SOURCE_CLASS  = { 'website-form':'website-form', 'booking-widget':'booking-widget', agent:'agent' };
 
 function sourceBadge(src) {
-  const label = SOURCE_LABELS[src] || src || 'Сайт';
-  const cls   = SOURCE_CLASS[src]  || 'other';
-  return `<span class="source-badge ${cls}">${label}</span>`;
+  return `<span class="source-badge ${SOURCE_CLASS[src] || 'other'}">${SOURCE_LABELS[src] || src || 'Сайт'}</span>`;
 }
 
-// ── Live clock ────────────────────────────────────────────────────────────────
-
+// ── Clock ─────────────────────────────────────────────────────────────────────
 function updateClock() {
-  const now = new Date();
-  const opts = { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' };
-  document.getElementById('header-time').textContent = now.toLocaleString('ru-RU', opts);
+  document.getElementById('header-time').textContent = new Date().toLocaleString('ru-RU',
+    { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' });
 }
-setInterval(updateClock, 1000);
-updateClock();
+setInterval(updateClock, 1000); updateClock();
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
-
 function showApp() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').classList.add('visible');
@@ -1430,17 +745,13 @@ document.getElementById('login-btn').addEventListener('click', doLogin);
 document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
 async function doLogin() {
-  const pass = document.getElementById('login-pass').value.trim();
+  const pass  = document.getElementById('login-pass').value.trim();
   const errEl = document.getElementById('login-error');
   errEl.textContent = '';
   if (!pass) { errEl.textContent = 'Введите пароль'; return; }
-
   const data = await fetch(API_URL + '/api/admin/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ password: pass }),
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pass }),
   }).then(r => r.json()).catch(() => ({ ok: false, error: 'Нет связи с сервером' }));
-
   if (data.ok) {
     token = data.token;
     localStorage.setItem(TOKEN_KEY, token);
@@ -1448,16 +759,13 @@ async function doLogin() {
   } else {
     errEl.textContent = data.error || 'Неверный пароль';
     const card = document.getElementById('login-card');
-    card.classList.remove('shake');
-    void card.offsetWidth;
-    card.classList.add('shake');
+    card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
   }
 }
 
 document.getElementById('logout-btn').addEventListener('click', showLogin);
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
-
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -1465,27 +773,19 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.classList.add('active');
     const tab = btn.dataset.tab;
     document.getElementById('tab-' + tab).classList.add('active');
-
-    if (tab === 'dashboard') {
-      loadDashboard();
-    } else if (tab === 'leads') {
-      clearInterval(dashRefreshTimer);
-      loadLeads();
-    } else if (tab === 'sessions') {
-      clearInterval(dashRefreshTimer);
-      loadSessions();
-    } else if (tab === 'abuse') {
-      clearInterval(dashRefreshTimer);
-      loadAbuse();
-    }
+    clearInterval(dashRefreshTimer);
+    if (tab === 'dashboard')  { loadDashboard(); }
+    else if (tab === 'leads') { loadLeads(); }
+    else if (tab === 'expenses') { loadExpenses(); }
+    else if (tab === 'sessions') { loadSessions(); }
+    else if (tab === 'abuse')    { loadAbuse(); }
   });
 });
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
-
 async function loadDashboard() {
   clearInterval(dashRefreshTimer);
-  await fetchStats();
+  await Promise.all([fetchStats(), loadRevenue()]);
   dashRefreshTimer = setInterval(fetchStats, 60000);
 }
 
@@ -1493,80 +793,117 @@ async function fetchStats() {
   const data = await api('/api/admin/stats').catch(() => null);
   if (!data || !data.ok) return;
   const s = data.stats;
-
   document.getElementById('s-total').textContent = s.total;
   document.getElementById('s-today').textContent = s.today;
   document.getElementById('s-week').textContent  = s.week;
   document.getElementById('s-month').textContent = s.month;
-
   document.getElementById('st-new').textContent    = s.byStatus.new;
   document.getElementById('st-inprog').textContent = s.byStatus.in_progress;
   document.getElementById('st-done').textContent   = s.byStatus.done;
   document.getElementById('st-cancel').textContent = s.byStatus.cancelled;
-
-  // Bar chart
   renderBarChart(s.daily);
-
-  // Top services
   const svcEl = document.getElementById('top-services');
-  if (s.topServices.length === 0) {
-    svcEl.innerHTML = '<div style="color:var(--text2);font-size:13px;">Нет данных</div>';
-  } else {
-    svcEl.innerHTML = s.topServices.map(sv => `
-      <div class="service-row">
-        <div class="service-meta">
-          <span class="service-name">${sv.name}</span>
-          <span class="service-pct">${sv.count} (${sv.pct}%)</span>
-        </div>
-        <div class="service-bar-wrap">
-          <div class="service-bar" style="width:${sv.pct}%"></div>
-        </div>
-      </div>
-    `).join('');
-  }
-
-  // By source
+  svcEl.innerHTML = s.topServices.length === 0 ? '<div style="color:var(--text2);font-size:13px;">Нет данных</div>'
+    : s.topServices.map(sv => `<div class="service-row"><div class="service-meta"><span class="service-name">${esc(sv.name)}</span><span class="service-pct">${sv.count} (${sv.pct}%)</span></div><div class="service-bar-wrap"><div class="service-bar" style="width:${sv.pct}%"></div></div></div>`).join('');
   const srcEl = document.getElementById('by-source');
   const srcs = Object.entries(s.bySource);
-  if (srcs.length === 0) {
-    srcEl.innerHTML = '<div style="color:var(--text2);font-size:13px;">Нет данных</div>';
-  } else {
-    srcEl.innerHTML = srcs.map(([src, cnt]) => `
-      <div class="source-row">
-        ${sourceBadge(src)}
-        <span class="source-count">${cnt}</span>
-      </div>
-    `).join('');
-  }
+  srcEl.innerHTML = srcs.length === 0 ? '<div style="color:var(--text2);font-size:13px;">Нет данных</div>'
+    : srcs.map(([src, cnt]) => `<div class="source-row">${sourceBadge(src)}<span class="source-count">${cnt}</span></div>`).join('');
 }
 
 function renderBarChart(daily) {
   const wrap = document.getElementById('bar-chart');
-  if (!daily || daily.length === 0) { wrap.innerHTML = ''; return; }
+  if (!daily || !daily.length) { wrap.innerHTML = ''; return; }
   const max = Math.max(...daily.map(d => d.count), 1);
-  wrap.innerHTML = daily.map(d => {
-    const pct  = Math.round(d.count / max * 100);
-    const label = d.date.slice(5); // MM-DD
-    return `
-      <div class="bar-wrap">
-        <div class="bar" style="height:${Math.max(pct,2)}%" data-val="${d.count}"></div>
-        <div class="bar-label">${label}</div>
+  wrap.innerHTML = daily.map(d => `
+    <div class="bar-wrap">
+      <div class="bar" style="height:${Math.max(Math.round(d.count/max*100),2)}%" data-val="${d.count}"></div>
+      <div class="bar-label">${d.date.slice(5)}</div>
+    </div>`).join('');
+}
+
+// ── Revenue / Financial ───────────────────────────────────────────────────────
+function getRevenueDateRange() {
+  const now   = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const iso   = d => d.toISOString().slice(0,10);
+  switch (revPeriod) {
+    case 'today':    return { from: iso(today), to: iso(today) };
+    case '7d':       { const d = new Date(today); d.setDate(d.getDate()-6); return { from: iso(d), to: iso(today) }; }
+    case '30d':      { const d = new Date(today); d.setDate(d.getDate()-29); return { from: iso(d), to: iso(today) }; }
+    case 'month':    { const d = new Date(now.getFullYear(), now.getMonth(), 1); return { from: iso(d), to: iso(today) }; }
+    case 'prevmonth':{ const d = new Date(now.getFullYear(), now.getMonth()-1, 1); const e = new Date(now.getFullYear(), now.getMonth(), 0); return { from: iso(d), to: iso(e) }; }
+    case 'year':     { const d = new Date(now.getFullYear(), 0, 1); return { from: iso(d), to: iso(today) }; }
+    case 'custom':   return { from: revFrom, to: revTo };
+    default:         { const d = new Date(today); d.setDate(d.getDate()-29); return { from: iso(d), to: iso(today) }; }
+  }
+}
+
+async function loadRevenue() {
+  const { from, to } = getRevenueDateRange();
+  if (!from || !to) return;
+  const qs   = new URLSearchParams({ dateFrom: from, dateTo: to }).toString();
+  const data = await api('/api/admin/revenue?' + qs).catch(() => null);
+  if (!data || !data.ok) return;
+  document.getElementById('fin-revenue').textContent  = fmtBYN(data.revenue.total);
+  document.getElementById('fin-expenses').textContent = fmtBYN(data.expenses.total);
+  const profit   = (data.revenue.total || 0) - (data.expenses.total || 0);
+  const profitEl = document.getElementById('fin-profit');
+  profitEl.textContent  = fmtBYN(profit);
+  profitEl.style.color  = profit >= 0 ? 'var(--green)' : 'var(--red)';
+  renderFinChart(data.revenue.daily || [], data.expenses.daily || []);
+}
+
+function renderFinChart(revDaily, expDaily) {
+  const dateMap = {};
+  for (const d of revDaily) dateMap[d.date] = { date: d.date, rev: d.amount, exp: 0 };
+  for (const d of expDaily) {
+    if (!dateMap[d.date]) dateMap[d.date] = { date: d.date, rev: 0, exp: 0 };
+    dateMap[d.date].exp = d.amount;
+  }
+  const days   = Object.values(dateMap).sort((a,b) => a.date.localeCompare(b.date));
+  const maxVal = Math.max(...days.map(d => Math.max(d.rev, d.exp)), 1);
+  const wrap   = document.getElementById('fin-chart');
+  if (!days.length) { wrap.innerHTML = '<div style="color:var(--text3);font-size:12px;padding:16px">Нет данных за период</div>'; return; }
+  wrap.innerHTML = days.map(d => {
+    const rPct = Math.round(d.rev / maxVal * 100);
+    const ePct = Math.round(d.exp / maxVal * 100);
+    return `<div class="fin-bar-group">
+      <div class="fin-bars">
+        <div class="fin-bar rev" style="height:${Math.max(rPct,1)}%" title="Доход: ${fmtBYN(d.rev)} BYN"></div>
+        <div class="fin-bar exp" style="height:${Math.max(ePct,1)}%" title="Затраты: ${fmtBYN(d.exp)} BYN"></div>
       </div>
-    `;
+      <div class="bar-label">${d.date.slice(5)}</div>
+    </div>`;
   }).join('');
 }
 
-// ── Leads ─────────────────────────────────────────────────────────────────────
+// Period buttons
+document.querySelectorAll('.period-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    revPeriod = btn.dataset.period;
+    const cr = document.getElementById('custom-range');
+    if (revPeriod === 'custom') {
+      cr.classList.add('show');
+    } else {
+      cr.classList.remove('show');
+      loadRevenue();
+    }
+  });
+});
 
+document.getElementById('rev-from').addEventListener('change', e => { revFrom = e.target.value; });
+document.getElementById('rev-to').addEventListener('change', e => { revTo = e.target.value; });
+
+// ── Leads ─────────────────────────────────────────────────────────────────────
 async function loadLeads() {
   document.getElementById('results-count').textContent = 'Загрузка...';
   const params = buildParams();
-  const qs = new URLSearchParams(params).toString();
-  const data = await api('/api/admin/leads' + (qs ? '?' + qs : '')).catch(() => null);
-  if (!data || !data.ok) {
-    document.getElementById('results-count').textContent = 'Ошибка загрузки';
-    return;
-  }
+  const qs     = new URLSearchParams(params).toString();
+  const data   = await api('/api/admin/leads' + (qs ? '?' + qs : '')).catch(() => null);
+  if (!data || !data.ok) { document.getElementById('results-count').textContent = 'Ошибка загрузки'; return; }
   allLeads = data.leads;
   filteredLeads = allLeads;
   currentPage = 1;
@@ -1575,67 +912,63 @@ async function loadLeads() {
 
 function buildParams() {
   const p = {};
-  const search = document.getElementById('f-search').value.trim();
-  const service = document.getElementById('f-service').value;
-  const source  = document.getElementById('f-source').value;
-  const status  = document.getElementById('f-status').value;
-  const from    = document.getElementById('f-from').value;
-  const to      = document.getElementById('f-to').value;
-  if (search)  p.search  = search;
-  if (service) p.service = service;
-  if (source)  p.source  = source;
-  if (status)  p.status  = status;
+  const s = id => document.getElementById(id);
+  const search  = s('f-search').value.trim();
+  const service = s('f-service').value;
+  const source  = s('f-source').value;
+  const status  = s('f-status').value;
+  const from    = s('f-from').value;
+  const to      = s('f-to').value;
+  if (search)  p.search   = search;
+  if (service) p.service  = service;
+  if (source)  p.source   = source;
+  if (status)  p.status   = status;
   if (from)    p.dateFrom = from;
   if (to)      p.dateTo   = to;
   return p;
 }
 
 function renderLeads() {
-  const tbody  = document.getElementById('leads-tbody');
+  const tbody   = document.getElementById('leads-tbody');
   const emptyEl = document.getElementById('leads-empty');
   const countEl = document.getElementById('results-count');
-  const total  = filteredLeads.length;
-
-  countEl.innerHTML = `Показано <span>${Math.min(PAGE_SIZE, total)}</span> из <span>${total}</span> заявок`;
-
-  if (total === 0) {
-    tbody.innerHTML = '';
-    emptyEl.style.display = '';
-    renderPagination(0);
-    return;
-  }
+  const total   = filteredLeads.length;
+  countEl.innerHTML = `Показано <span>${Math.min(PAGE_SIZE * currentPage, total)}</span> из <span>${total}</span> заявок`;
+  if (total === 0) { tbody.innerHTML = ''; emptyEl.style.display = ''; renderPagination(0); return; }
   emptyEl.style.display = 'none';
-
   const start = (currentPage - 1) * PAGE_SIZE;
   const page  = filteredLeads.slice(start, start + PAGE_SIZE);
 
   tbody.innerHTML = page.map(lead => {
-    const noteTrunc = (lead.notes || '').length > 50
-      ? (lead.notes || '').slice(0, 50) + '…'
-      : (lead.notes || '—');
-    const noteTitle = (lead.notes || '').replace(/"/g, '&quot;');
-    return `
-      <tr data-id="${lead.id}">
-        <td class="td-date">${formatDate(lead.created_at)}</td>
-        <td class="td-name">${esc(lead.name || '—')}</td>
-        <td class="td-phone"><a href="tel:${esc(lead.phone)}">${esc(lead.phone)}</a></td>
-        <td class="td-service">${esc(lead.service || '—')}</td>
-        <td>${sourceBadge(lead.source)}</td>
-        <td>
-          <select class="status-select ${lead.status || 'new'}" data-id="${lead.id}" onchange="onStatusChange(this)">
-            <option value="new"         ${lead.status==='new'?'selected':''}>Новая</option>
-            <option value="in_progress" ${lead.status==='in_progress'?'selected':''}>В работе</option>
-            <option value="done"        ${lead.status==='done'?'selected':''}>Выполнена</option>
-            <option value="cancelled"   ${lead.status==='cancelled'?'selected':''}>Отменена</option>
-          </select>
-        </td>
-        <td class="td-note" title="${noteTitle}">${esc(noteTrunc)}</td>
-        <td class="td-actions">
-          <button class="btn-icon" title="Редактировать" onclick="openEdit(${lead.id})">✏</button>
-          <button class="btn-icon del" title="Удалить" onclick="deleteLead(${lead.id})">🗑</button>
-        </td>
-      </tr>
-    `;
+    const svcDate    = lead.service_date || '';
+    const agentAmt   = lead.agent_amount || '';
+    const actualAmt  = lead.actual_amount;
+    const actualDisp = (actualAmt !== null && actualAmt !== undefined && actualAmt !== '')
+      ? `<span style="color:var(--green);font-weight:600">${fmtBYN(actualAmt)}</span>`
+      : '<span style="color:var(--text3)">—</span>';
+    const noteVal  = (lead.notes || '').length > 40 ? (lead.notes || '').slice(0,40) + '…' : (lead.notes || '');
+    return `<tr data-id="${lead.id}">
+      <td class="td-date">${formatDate(lead.created_at)}</td>
+      <td class="td-edit td-name" data-val="${esc(lead.name||'')}" onclick="startInlineEdit(this,${lead.id},'name','text')">${esc(lead.name||'—')}</td>
+      <td class="td-phone"><a href="tel:${esc(lead.phone)}">${esc(lead.phone)}</a></td>
+      <td class="td-edit td-service" data-val="${esc(lead.service||'')}" onclick="startInlineEdit(this,${lead.id},'service','text')">${esc(lead.service||'—')}</td>
+      <td class="td-edit td-date" data-val="${esc(svcDate)}" onclick="startInlineEdit(this,${lead.id},'service_date','date')">${esc(svcDate||'—')}</td>
+      <td>${sourceBadge(lead.source)}</td>
+      <td style="color:var(--text3);font-size:12px">${esc(agentAmt||'—')}</td>
+      <td class="td-edit" data-val="${actualAmt !== null && actualAmt !== undefined ? actualAmt : ''}" onclick="startInlineEdit(this,${lead.id},'actual_amount','number')">${actualDisp}</td>
+      <td>
+        <select class="status-select ${lead.status||'new'}" data-id="${lead.id}" onchange="onStatusChange(this)">
+          <option value="new"         ${lead.status==='new'?'selected':''}>Новая</option>
+          <option value="in_progress" ${lead.status==='in_progress'?'selected':''}>В работе</option>
+          <option value="done"        ${lead.status==='done'?'selected':''}>Выполнена</option>
+          <option value="cancelled"   ${lead.status==='cancelled'?'selected':''}>Отменена</option>
+        </select>
+      </td>
+      <td class="td-edit td-note" data-val="${esc(lead.notes||'')}" onclick="startInlineEdit(this,${lead.id},'notes','text')" title="${esc(lead.notes||'')}">${esc(noteVal||'—')}</td>
+      <td class="td-actions">
+        <button class="btn-icon del" title="Удалить" onclick="deleteLeadRow(${lead.id})">🗑</button>
+      </td>
+    </tr>`;
   }).join('');
 
   renderPagination(total);
@@ -1643,17 +976,13 @@ function renderLeads() {
 
 function renderPagination(total) {
   const pages = Math.ceil(total / PAGE_SIZE);
-  const el = document.getElementById('pagination');
+  const el    = document.getElementById('pagination');
   if (pages <= 1) { el.innerHTML = ''; return; }
-
-  let html = '';
-  html += `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
+  let html = `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
   for (let i = 1; i <= pages; i++) {
-    if (i === 1 || i === pages || Math.abs(i - currentPage) <= 1) {
+    if (i===1 || i===pages || Math.abs(i-currentPage)<=1)
       html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
-    } else if (Math.abs(i - currentPage) === 2) {
-      html += `<span style="color:var(--text3);padding:0 4px">…</span>`;
-    }
+    else if (Math.abs(i-currentPage)===2) html += `<span style="color:var(--text3);padding:0 4px">…</span>`;
   }
   html += `<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===pages?'disabled':''}>›</button>`;
   el.innerHTML = html;
@@ -1667,43 +996,99 @@ function goPage(p) {
   document.querySelector('.table-wrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function esc(str) {
-  return String(str || '')
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+// ── Inline editing ────────────────────────────────────────────────────────────
+function startInlineEdit(td, leadId, field, type) {
+  if (td.classList.contains('editing')) return;
+  td.classList.add('editing');
+  const original = String(td.dataset.val !== undefined ? td.dataset.val : '');
+
+  let input;
+  if (type === 'date') {
+    input = Object.assign(document.createElement('input'), { type:'date', value:original, className:'inline-edit-input' });
+  } else if (type === 'number') {
+    input = Object.assign(document.createElement('input'), { type:'number', value:original, min:'0', step:'0.01', className:'inline-edit-input' });
+    input.style.width = '90px';
+  } else {
+    input = Object.assign(document.createElement('input'), { type:'text', value:original, className:'inline-edit-input' });
+  }
+
+  td.innerHTML = '';
+  td.appendChild(input);
+  input.focus();
+  if (type !== 'date') { try { input.select(); } catch(e){} }
+
+  let committed = false;
+
+  async function commit() {
+    if (committed) return;
+    committed = true;
+    td.classList.remove('editing');
+    const newVal = input.value.trim();
+    if (newVal === original) { renderEditCell(td, field, original, leadId); return; }
+    const body = { [field]: field === 'actual_amount' ? (parseFloat(newVal) || 0) : newVal };
+    const data = await api('/api/admin/leads/' + leadId, { method:'PUT', body }).catch(() => null);
+    if (data && data.ok) {
+      td.dataset.val = newVal;
+      const lead = allLeads.find(l => String(l.id) === String(leadId));
+      if (lead) lead[field] = body[field];
+      renderEditCell(td, field, newVal, leadId);
+      showToast('Сохранено');
+    } else {
+      renderEditCell(td, field, original, leadId);
+      showToast('Ошибка сохранения', 'error');
+    }
+  }
+
+  function cancel() {
+    if (committed) return;
+    committed = true;
+    td.classList.remove('editing');
+    renderEditCell(td, field, original, leadId);
+  }
+
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    if (e.key === 'Escape') { input.removeEventListener('blur', commit); cancel(); }
+  });
+}
+
+function renderEditCell(td, field, value, leadId) {
+  td.innerHTML = '';
+  if (field === 'actual_amount') {
+    const n = parseFloat(value) || 0;
+    td.innerHTML = n > 0 ? `<span style="color:var(--green);font-weight:600">${fmtBYN(n)}</span>` : '<span style="color:var(--text3)">—</span>';
+  } else if (field === 'notes') {
+    const trunc = value.length > 40 ? value.slice(0,40) + '…' : value;
+    td.textContent = trunc || '—';
+    td.title = value;
+  } else {
+    td.textContent = value || '—';
+  }
+  td.dataset.val = value;
 }
 
 // ── Filters ───────────────────────────────────────────────────────────────────
-
 document.getElementById('f-search').addEventListener('input', () => {
   clearTimeout(searchDebounce);
   searchDebounce = setTimeout(loadLeads, 300);
 });
-
 ['f-service','f-source','f-status','f-from','f-to'].forEach(id => {
   document.getElementById(id).addEventListener('change', loadLeads);
 });
-
 document.getElementById('f-reset').addEventListener('click', () => {
-  ['f-search','f-from','f-to'].forEach(id => document.getElementById(id).value = '');
-  ['f-service','f-source','f-status'].forEach(id => document.getElementById(id).value = '');
+  ['f-search','f-from','f-to'].forEach(id => { document.getElementById(id).value = ''; });
+  ['f-service','f-source','f-status'].forEach(id => { document.getElementById(id).value = ''; });
   loadLeads();
 });
 
-// ── Status change inline ──────────────────────────────────────────────────────
-
+// ── Status change ─────────────────────────────────────────────────────────────
 async function onStatusChange(sel) {
   const id     = sel.dataset.id;
   const status = sel.value;
   sel.className = 'status-select ' + status;
-
-  const data = await api('/api/admin/leads/' + id, {
-    method: 'PUT',
-    body:   { status },
-  }).catch(() => null);
-
+  const data = await api('/api/admin/leads/' + id, { method:'PUT', body:{ status } }).catch(() => null);
   if (data && data.ok) {
-    // Update in local array
     const lead = allLeads.find(l => String(l.id) === String(id));
     if (lead) lead.status = status;
     showToast('Статус обновлён');
@@ -1713,11 +1098,9 @@ async function onStatusChange(sel) {
 }
 
 // ── Delete lead ───────────────────────────────────────────────────────────────
-
-async function deleteLead(id) {
+async function deleteLeadRow(id) {
   if (!confirm('Удалить эту заявку? Действие необратимо.')) return;
-
-  const data = await api('/api/admin/leads/' + id, { method: 'DELETE' }).catch(() => null);
+  const data = await api('/api/admin/leads/' + id, { method:'DELETE' }).catch(() => null);
   if (data && data.ok) {
     allLeads      = allLeads.filter(l => l.id !== id);
     filteredLeads = filteredLeads.filter(l => l.id !== id);
@@ -1728,13 +1111,11 @@ async function deleteLead(id) {
   }
 }
 
-// ── Edit modal ────────────────────────────────────────────────────────────────
-
+// ── Edit modal (legacy) ───────────────────────────────────────────────────────
 function openEdit(id) {
   const lead = allLeads.find(l => l.id === id);
   if (!lead) return;
   editingId = id;
-
   document.getElementById('m-name').textContent    = lead.name    || '—';
   document.getElementById('m-phone').textContent   = lead.phone   || '—';
   document.getElementById('m-service').textContent = lead.service || '—';
@@ -1743,7 +1124,6 @@ function openEdit(id) {
   document.getElementById('m-message').textContent = lead.message || '—';
   document.getElementById('m-status').value        = lead.status  || 'new';
   document.getElementById('m-notes').value         = lead.notes   || '';
-
   document.getElementById('modal-overlay').classList.add('open');
   document.getElementById('m-notes').focus();
 }
@@ -1763,39 +1143,144 @@ document.getElementById('modal-save').addEventListener('click', async () => {
   if (!editingId) return;
   const status = document.getElementById('m-status').value;
   const notes  = document.getElementById('m-notes').value;
-
-  const data = await api('/api/admin/leads/' + editingId, {
-    method: 'PUT',
-    body:   { status, notes },
-  }).catch(() => null);
-
+  const data = await api('/api/admin/leads/' + editingId, { method:'PUT', body:{ status, notes } }).catch(() => null);
   if (data && data.ok) {
     const lead = allLeads.find(l => l.id === editingId);
     if (lead) { lead.status = status; lead.notes = notes; }
-    renderLeads();
-    closeModal();
-    showToast('Заявка сохранена');
+    renderLeads(); closeModal(); showToast('Заявка сохранена');
   } else {
     showToast('Ошибка сохранения', 'error');
   }
 });
 
-// ── Keyboard shortcuts ────────────────────────────────────────────────────────
+// ── Expenses ──────────────────────────────────────────────────────────────────
+// Set default date to today
+(function(){
+  const d = new Date();
+  const iso = d.toISOString().slice(0,10);
+  const el = document.getElementById('exp-new-date');
+  if (el) el.value = iso;
+})();
 
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeModal(); closeChatModal(); }
+async function loadExpenses() {
+  const from = document.getElementById('exp-from').value;
+  const to   = document.getElementById('exp-to').value;
+  const cat  = document.getElementById('exp-cat-filter').value;
+  const params = {};
+  if (from) params.dateFrom  = from;
+  if (to)   params.dateTo    = to;
+  if (cat)  params.category  = cat;
+  const qs   = new URLSearchParams(params).toString();
+  const data = await api('/api/admin/expenses' + (qs ? '?' + qs : '')).catch(() => null);
+  if (!data || !data.ok) return;
+  allExpenses = data.expenses;
+  document.getElementById('exp-total-display').textContent = fmtBYN(data.total) + ' BYN';
+  document.getElementById('exp-count-display').textContent = data.count + ' записей';
+  renderExpenses();
+}
+
+async function addExpense() {
+  const category    = document.getElementById('exp-new-cat').value;
+  const description = document.getElementById('exp-new-desc').value.trim();
+  const amount      = parseFloat(document.getElementById('exp-new-amount').value) || 0;
+  const date        = document.getElementById('exp-new-date').value;
+  if (!amount || !date) { showToast('Укажи сумму и дату', 'error'); return; }
+  const data = await api('/api/admin/expenses', { method:'POST', body:{ category, description, amount, date } }).catch(() => null);
+  if (data && data.ok) {
+    document.getElementById('exp-new-desc').value   = '';
+    document.getElementById('exp-new-amount').value = '';
+    showToast('Затрата добавлена');
+    loadExpenses();
+  } else {
+    showToast('Ошибка добавления', 'error');
+  }
+}
+
+async function deleteExpense(id) {
+  if (!confirm('Удалить запись?')) return;
+  const data = await api('/api/admin/expenses/' + id, { method:'DELETE' }).catch(() => null);
+  if (data && data.ok) { showToast('Удалено'); loadExpenses(); }
+  else showToast('Ошибка', 'error');
+}
+
+function renderExpenses() {
+  const tbody   = document.getElementById('exp-tbody');
+  const emptyEl = document.getElementById('exp-empty');
+  if (!allExpenses.length) { tbody.innerHTML = ''; emptyEl.style.display = ''; return; }
+  emptyEl.style.display = 'none';
+  tbody.innerHTML = allExpenses.map(e => `
+    <tr>
+      <td class="td-edit td-date" data-val="${esc(e.date||'')}" onclick="startExpenseEdit(this,${e.id},'date','date')">${esc(e.date||'—')}</td>
+      <td class="td-edit" data-val="${esc(e.category||'Прочее')}" onclick="startExpenseEdit(this,${e.id},'category','select-cat')">
+        <span class="cat-badge cat-${esc(e.category||'Прочее')}">${esc(e.category||'—')}</span>
+      </td>
+      <td class="td-edit" data-val="${esc(e.description||'')}" onclick="startExpenseEdit(this,${e.id},'description','text')">${esc(e.description||'—')}</td>
+      <td class="td-edit" data-val="${e.amount||0}" onclick="startExpenseEdit(this,${e.id},'amount','number')">
+        <span style="color:var(--red);font-weight:600">${fmtBYN(e.amount)} BYN</span>
+      </td>
+      <td><button class="btn-icon del" onclick="deleteExpense(${e.id})">🗑</button></td>
+    </tr>`).join('');
+}
+
+function startExpenseEdit(td, expId, field, type) {
+  if (td.classList.contains('editing')) return;
+  td.classList.add('editing');
+  const original = String(td.dataset.val !== undefined ? td.dataset.val : '');
+
+  let input;
+  if (type === 'select-cat') {
+    input = document.createElement('select');
+    input.className = 'inline-edit-input';
+    EXPENSE_CATEGORIES.forEach(c => {
+      const o = document.createElement('option');
+      o.value = c; o.textContent = c;
+      if (c === original) o.selected = true;
+      input.appendChild(o);
+    });
+  } else if (type === 'date') {
+    input = Object.assign(document.createElement('input'), { type:'date', value:original, className:'inline-edit-input' });
+  } else if (type === 'number') {
+    input = Object.assign(document.createElement('input'), { type:'number', value:original, min:'0', step:'0.01', className:'inline-edit-input' });
+    input.style.width = '90px';
+  } else {
+    input = Object.assign(document.createElement('input'), { type:'text', value:original, className:'inline-edit-input' });
+  }
+
+  td.innerHTML = ''; td.appendChild(input); input.focus();
+
+  let committed = false;
+  async function commit() {
+    if (committed) return; committed = true;
+    td.classList.remove('editing');
+    const newVal = input.value;
+    if (String(newVal) === original) { loadExpenses(); return; }
+    const body = { [field]: field === 'amount' ? (parseFloat(newVal)||0) : newVal };
+    const data = await api('/api/admin/expenses/' + expId, { method:'PUT', body }).catch(() => null);
+    if (data && data.ok) { showToast('Сохранено'); }
+    else showToast('Ошибка', 'error');
+    loadExpenses();
+  }
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    if (e.key === 'Escape') { input.removeEventListener('blur', commit); committed = true; td.classList.remove('editing'); loadExpenses(); }
+  });
+}
+
+['exp-from','exp-to','exp-cat-filter'].forEach(id => {
+  document.getElementById(id).addEventListener('change', loadExpenses);
+});
+document.getElementById('exp-reset').addEventListener('click', () => {
+  ['exp-from','exp-to'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('exp-cat-filter').value = '';
+  loadExpenses();
 });
 
 // ── Sessions ──────────────────────────────────────────────────────────────────
-
-let allSessions = [];
-let sessSearchDebounce = null;
-
 async function loadSessions() {
   document.getElementById('ss-count').textContent = 'Загрузка...';
-  document.getElementById('sess-list').innerHTML = '';
+  document.getElementById('sess-list').innerHTML  = '';
   document.getElementById('sess-empty').style.display = 'none';
-
   const params = {};
   const search    = document.getElementById('ss-search').value.trim();
   const converted = document.getElementById('ss-converted').value;
@@ -1805,61 +1290,40 @@ async function loadSessions() {
   if (converted) params.converted = converted;
   if (from)      params.dateFrom  = from;
   if (to)        params.dateTo    = to;
-
   const qs   = new URLSearchParams(params).toString();
   const data = await api('/api/admin/sessions' + (qs ? '?' + qs : '')).catch(() => null);
-
-  if (!data || !data.ok) {
-    document.getElementById('ss-count').textContent = 'Ошибка загрузки';
-    return;
-  }
-
+  if (!data || !data.ok) { document.getElementById('ss-count').textContent = 'Ошибка загрузки'; return; }
   allSessions = data.sessions;
-
   document.getElementById('ss-total').textContent = data.total;
   document.getElementById('ss-today').textContent = data.todayCount;
   document.getElementById('ss-conv').textContent  = data.convRate + '%';
-
-  const countEl = document.getElementById('ss-count');
-  countEl.innerHTML = `Найдено <span>${data.total}</span> диалогов — <span style="color:var(--green)">${data.convertedCount}</span> конвертированы`;
-
-  if (data.total === 0) {
-    document.getElementById('sess-empty').style.display = '';
-    return;
-  }
-
+  document.getElementById('ss-count').innerHTML =
+    `Найдено <span>${data.total}</span> диалогов — <span style="color:var(--green)">${data.convertedCount}</span> конвертированы`;
+  if (data.total === 0) { document.getElementById('sess-empty').style.display = ''; return; }
   document.getElementById('sess-list').innerHTML = allSessions.map((s, i) => {
-    const preview   = esc(s.first_message || '(пустой диалог)');
-    const dateStr   = formatDate(s.updated_at);
     const convCls   = s.is_converted ? 'converted' : 'dropped';
     const convLabel = s.is_converted ? '✅ Заявка оформлена' : '💬 Без заявки';
-    const convBadge = s.is_converted ? 'converted' : 'dropped';
-
     let formInfo = '';
     if (s.form_data) {
       const fd = s.form_data;
-      formInfo = `${esc(fd.name || '')} ${esc(fd.phone || '')} — ${esc(fd.service || '')}`;
+      formInfo = `${esc(fd.name||'')} ${esc(fd.phone||'')} — ${esc(fd.service||'')}`;
     }
-
-    return `
-      <div class="sess-card ${convCls}" onclick="openChatModal(${i})">
-        <div class="sess-avatar">${s.is_converted ? '✅' : '💬'}</div>
-        <div class="sess-body">
-          <div class="sess-preview">${preview}</div>
-          <div class="sess-meta">
-            <span class="sess-badge ${convBadge}">${convLabel}</span>
-            <span class="sess-msg-count">${s.message_count} сообщений</span>
-            ${formInfo ? `<span class="sess-msg-count" style="color:var(--green)">${formInfo}</span>` : ''}
-          </div>
+    return `<div class="sess-card ${convCls}" onclick="openChatModal(${i})">
+      <div class="sess-avatar">${s.is_converted ? '✅' : '💬'}</div>
+      <div class="sess-body">
+        <div class="sess-preview">${esc(s.first_message||'(пустой диалог)')}</div>
+        <div class="sess-meta">
+          <span class="sess-badge ${convCls}">${convLabel}</span>
+          <span class="sess-msg-count">${s.message_count} сообщений</span>
+          ${formInfo ? `<span class="sess-msg-count" style="color:var(--green)">${formInfo}</span>` : ''}
         </div>
-        <div class="sess-date">${dateStr}</div>
-        <button class="sess-open-btn" onclick="event.stopPropagation();openChatModal(${i})">Читать →</button>
       </div>
-    `;
+      <div class="sess-date">${formatDate(s.updated_at)}</div>
+      <button class="sess-open-btn" onclick="event.stopPropagation();openChatModal(${i})">Читать →</button>
+    </div>`;
   }).join('');
 }
 
-// Sessions filters
 document.getElementById('ss-search').addEventListener('input', () => {
   clearTimeout(sessSearchDebounce);
   sessSearchDebounce = setTimeout(loadSessions, 300);
@@ -1868,49 +1332,32 @@ document.getElementById('ss-search').addEventListener('input', () => {
   document.getElementById(id).addEventListener('change', loadSessions);
 });
 document.getElementById('ss-reset').addEventListener('click', () => {
-  document.getElementById('ss-search').value = '';
+  ['ss-search','ss-from','ss-to'].forEach(id => { document.getElementById(id).value = ''; });
   document.getElementById('ss-converted').value = '';
-  document.getElementById('ss-from').value = '';
-  document.getElementById('ss-to').value = '';
   loadSessions();
 });
 
-// ── Chat Viewer Modal ─────────────────────────────────────────────────────────
-
+// ── Chat modal ────────────────────────────────────────────────────────────────
 function openChatModal(idx) {
   const s = allSessions[idx];
   if (!s) return;
-
   document.getElementById('cm-title').textContent = 'Диалог — ' + formatDate(s.updated_at);
   document.getElementById('cm-sub').textContent   = s.message_count + ' сообщений · ' + (s.is_converted ? 'Заявка оформлена' : 'Без заявки');
-
-  // Form banner
   const banner = document.getElementById('cm-banner');
   if (s.form_data) {
     const fd = s.form_data;
     document.getElementById('cm-banner-text').textContent =
-      `Заявка: ${fd.name || '?'} · ${fd.phone || '?'} · ${fd.service || '?'}${fd.comment ? ' · ' + fd.comment : ''}`;
+      `Заявка: ${fd.name||'?'} · ${fd.phone||'?'} · ${fd.service||'?'}${fd.comment?' · '+fd.comment:''}`;
     banner.style.display = '';
-  } else {
-    banner.style.display = 'none';
-  }
-
-  // Render messages
+  } else { banner.style.display = 'none'; }
   const container = document.getElementById('cm-messages');
   container.innerHTML = (s.messages || []).map(m => {
     const role    = m.role === 'user' ? 'user' : 'assistant';
     const label   = role === 'user' ? 'Клиент' : 'Алиса';
-    // Strip internal [FORM:...] marker from display
-    const content = esc((m.content || '').replace(/\[FORM:[^\]]+\]/g, '').trim());
+    const content = esc((m.content || '').replace(/\[FORM:[^\]]+\]/g,'').trim());
     if (!content) return '';
-    return `
-      <div class="chat-bubble ${role}">
-        ${content}
-        <div class="chat-bubble-meta">${label}</div>
-      </div>
-    `;
+    return `<div class="chat-bubble ${role}">${content}<div class="chat-bubble-meta">${label}</div></div>`;
   }).join('');
-
   document.getElementById('chat-modal-overlay').classList.add('open');
   container.scrollTop = container.scrollHeight;
 }
@@ -1924,74 +1371,49 @@ document.getElementById('chat-modal-overlay').addEventListener('click', e => {
   if (e.target === document.getElementById('chat-modal-overlay')) closeChatModal();
 });
 
-// ── Abuse / Нарушители ────────────────────────────────────────────────────────
-
+// ── Abuse ─────────────────────────────────────────────────────────────────────
 async function loadAbuse() {
   document.getElementById('ab-count').textContent = 'Загрузка...';
-  document.getElementById('ab-list').innerHTML = '';
+  document.getElementById('ab-list').innerHTML    = '';
   document.getElementById('ab-empty').style.display = 'none';
-
   const params = {};
   const from = document.getElementById('ab-from').value;
   const to   = document.getElementById('ab-to').value;
   if (from) params.dateFrom = from;
   if (to)   params.dateTo   = to;
-
   const qs   = new URLSearchParams(params).toString();
   const data = await api('/api/admin/abuse' + (qs ? '?' + qs : '')).catch(() => null);
-
-  if (!data || !data.ok) {
-    document.getElementById('ab-count').textContent = 'Ошибка загрузки';
-    return;
-  }
-
+  if (!data || !data.ok) { document.getElementById('ab-count').textContent = 'Ошибка загрузки'; return; }
   document.getElementById('ab-total').textContent = data.total;
   document.getElementById('ab-ips').textContent   = data.uniqueIPs;
   document.getElementById('ab-today').textContent = data.todayCount;
-
   if (data.uniqueIPs === 0) {
     document.getElementById('ab-count').textContent = 'Нарушителей не найдено';
     document.getElementById('ab-empty').style.display = '';
     return;
   }
-
   document.getElementById('ab-count').innerHTML =
     `<span>${data.uniqueIPs}</span> уникальных IP — всего <span>${data.total}</span> инцидентов`;
-
   document.getElementById('ab-list').innerHTML = data.byIP.map(rec => {
     const srcSet   = rec.sources || [];
-    const srcClass = srcSet.includes('chat') && srcSet.includes('form') ? 'both'
-                   : srcSet.includes('chat') ? 'chat' : 'form';
-    const srcLabel = srcSet.includes('chat') && srcSet.includes('form') ? 'Чат + Форма'
-                   : srcSet.includes('chat') ? 'Чат' : 'Форма';
-
-    const msgs = (rec.events || []).slice(0, 5).map(e => `
+    const srcClass = srcSet.includes('chat') && srcSet.includes('form') ? 'both' : srcSet.includes('chat') ? 'chat' : 'form';
+    const srcLabel = srcSet.includes('chat') && srcSet.includes('form') ? 'Чат + Форма' : srcSet.includes('chat') ? 'Чат' : 'Форма';
+    const msgs = (rec.events || []).slice(0,5).map(e => `
       <div class="abuse-msg-row">
-        <span class="abuse-msg-src">${e.source === 'chat' ? '💬' : '📋'}</span>
+        <span class="abuse-msg-src">${e.source==='chat'?'💬':'📋'}</span>
         <span class="abuse-msg-text">${esc(e.message_preview)}</span>
         <span class="abuse-msg-time">${formatDate(e.detected_at)}</span>
+      </div>`).join('');
+    const moreCount = (rec.events||[]).length - 5;
+    return `<div class="abuse-ip-card">
+      <div class="abuse-ip-header">
+        <span class="abuse-ip-addr">${esc(rec.ip)}</span>
+        <span class="abuse-count-badge">${rec.count} инцид.</span>
+        <span class="abuse-source-badge ${srcClass}">${srcLabel}</span>
+        <span class="abuse-dates">Первый: ${formatDate(rec.first_seen)}<br>Последний: ${formatDate(rec.last_seen)}</span>
       </div>
-    `).join('');
-
-    const moreCount = (rec.events || []).length - 5;
-
-    return `
-      <div class="abuse-ip-card">
-        <div class="abuse-ip-header">
-          <span class="abuse-ip-addr">${esc(rec.ip)}</span>
-          <span class="abuse-count-badge">${rec.count} инцид.</span>
-          <span class="abuse-source-badge ${srcClass}">${srcLabel}</span>
-          <span class="abuse-dates">
-            Первый: ${formatDate(rec.first_seen)}<br>
-            Последний: ${formatDate(rec.last_seen)}
-          </span>
-        </div>
-        <div class="abuse-messages">
-          ${msgs}
-          ${moreCount > 0 ? `<div style="font-size:12px;color:var(--text3);padding:4px 12px">… и ещё ${moreCount} сообщений</div>` : ''}
-        </div>
-      </div>
-    `;
+      <div class="abuse-messages">${msgs}${moreCount>0?`<div style="font-size:12px;color:var(--text3);padding:4px 12px">… и ещё ${moreCount} сообщений</div>`:''}</div>
+    </div>`;
   }).join('');
 }
 
@@ -2003,13 +1425,18 @@ document.getElementById('ab-reset').addEventListener('click', () => {
   loadAbuse();
 });
 
-// ── Init ──────────────────────────────────────────────────────────────────────
+// ── Keyboard shortcuts ────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closeModal(); closeChatModal(); }
+});
 
-if (token) {
-  showApp();
-} else {
-  document.getElementById('login-pass').focus();
-}
+// ── Init ──────────────────────────────────────────────────────────────────────
+// Set default period button active state
+document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+document.querySelector('[data-period="today"]').classList.add('active');
+
+if (token) { showApp(); }
+else { document.getElementById('login-pass').focus(); }
 </script>
 </body>
 </html>

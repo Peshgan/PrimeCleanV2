@@ -1,6 +1,9 @@
 'use strict';
 const express = require('express');
-const { getLeads, updateLead, deleteLead, getStats, getSessions, getAbuseLog } = require('../services/db');
+const {
+  getLeads, updateLead, deleteLead, getStats, getSessions, getAbuseLog,
+  saveExpense, updateExpense, deleteExpense, getExpenses, getRevenue,
+} = require('../services/db');
 
 const router = express.Router();
 
@@ -64,9 +67,9 @@ router.get('/stats', requireAuth, (req, res) => {
 
 router.put('/leads/:id', requireAuth, (req, res) => {
   const { id } = req.params;
-  const { status, notes } = req.body || {};
+  const { status, notes, name, phone, service, message, service_date, service_time, agent_amount, actual_amount } = req.body || {};
   try {
-    const updated = updateLead(id, { status, notes });
+    const updated = updateLead(id, { status, notes, name, phone, service, message, service_date, service_time, agent_amount, actual_amount });
     if (!updated) return res.status(404).json({ error: 'Lead not found' });
     res.json({ ok: true, lead: updated });
   } catch (err) {
@@ -99,7 +102,6 @@ router.get('/sessions', requireAuth, (req, res) => {
     const convertedCount = sessions.filter(s => s.is_converted).length;
     const convRate       = total ? Math.round(convertedCount / total * 100) : 0;
 
-    // Today's sessions
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayCount = sessions.filter(s => new Date(s.updated_at) >= today).length;
@@ -121,6 +123,93 @@ router.get('/abuse', requireAuth, (req, res) => {
   } catch (err) {
     console.error('[admin/abuse]', err.message);
     res.status(500).json({ error: 'Could not fetch abuse log' });
+  }
+});
+
+// ── GET /api/admin/expenses ───────────────────────────────────────────────────
+
+router.get('/expenses', requireAuth, (req, res) => {
+  const { dateFrom, dateTo, category } = req.query;
+  try {
+    const result = getExpenses({ dateFrom, dateTo, category });
+    res.json({ ok: true, ...result });
+  } catch (err) {
+    console.error('[admin/expenses GET]', err.message);
+    res.status(500).json({ error: 'Could not fetch expenses' });
+  }
+});
+
+// ── POST /api/admin/expenses ──────────────────────────────────────────────────
+
+router.post('/expenses', requireAuth, (req, res) => {
+  const { category, description, amount, date } = req.body || {};
+  if (!amount || parseFloat(amount) <= 0) {
+    return res.status(400).json({ error: 'amount must be > 0' });
+  }
+  try {
+    const expense = saveExpense({ category, description, amount, date });
+    res.json({ ok: true, expense });
+  } catch (err) {
+    console.error('[admin/expenses POST]', err.message);
+    res.status(500).json({ error: 'Could not save expense' });
+  }
+});
+
+// ── PUT /api/admin/expenses/:id ───────────────────────────────────────────────
+
+router.put('/expenses/:id', requireAuth, (req, res) => {
+  const { id } = req.params;
+  const { category, description, amount, date } = req.body || {};
+  try {
+    const updated = updateExpense(id, { category, description, amount, date });
+    if (!updated) return res.status(404).json({ error: 'Expense not found' });
+    res.json({ ok: true, expense: updated });
+  } catch (err) {
+    console.error('[admin/expenses PUT]', err.message);
+    res.status(500).json({ error: 'Could not update expense' });
+  }
+});
+
+// ── DELETE /api/admin/expenses/:id ───────────────────────────────────────────
+
+router.delete('/expenses/:id', requireAuth, (req, res) => {
+  const { id } = req.params;
+  try {
+    const deleted = deleteExpense(id);
+    if (!deleted) return res.status(404).json({ error: 'Expense not found' });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[admin/expenses DELETE]', err.message);
+    res.status(500).json({ error: 'Could not delete expense' });
+  }
+});
+
+// ── GET /api/admin/revenue ────────────────────────────────────────────────────
+
+router.get('/revenue', requireAuth, (req, res) => {
+  const { dateFrom, dateTo } = req.query;
+  try {
+    const revenue  = getRevenue({ dateFrom, dateTo });
+    const expenses = getExpenses({ dateFrom, dateTo });
+
+    // Build expenses daily breakdown
+    const expDailyMap = {};
+    for (const e of expenses.expenses) {
+      const d = e.date;
+      if (!expDailyMap[d]) expDailyMap[d] = { date: d, amount: 0, count: 0 };
+      expDailyMap[d].amount += parseFloat(e.amount) || 0;
+      expDailyMap[d].count++;
+    }
+    const expDaily = Object.values(expDailyMap).sort((a, b) => a.date.localeCompare(b.date));
+
+    res.json({
+      ok: true,
+      revenue: { ...revenue, daily: revenue.daily },
+      expenses: { total: expenses.total, count: expenses.count, daily: expDaily },
+    });
+  } catch (err) {
+    console.error('[admin/revenue]', err.message);
+    res.status(500).json({ error: 'Could not fetch revenue' });
   }
 });
 
