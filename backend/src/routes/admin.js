@@ -1,6 +1,6 @@
 'use strict';
 const express = require('express');
-const { getLeads, updateLead, deleteLead, getStats } = require('../services/db');
+const { getLeads, updateLead, deleteLead, getStats, getSessions } = require('../services/db');
 
 const router = express.Router();
 
@@ -86,6 +86,28 @@ router.delete('/leads/:id', requireAuth, (req, res) => {
   } catch (err) {
     console.error('[admin/leads DELETE]', err.message);
     res.status(500).json({ error: 'Could not delete lead' });
+  }
+});
+
+// ── GET /api/admin/sessions ───────────────────────────────────────────────────
+
+router.get('/sessions', requireAuth, (req, res) => {
+  const { dateFrom, dateTo, converted, search } = req.query;
+  try {
+    const sessions = getSessions({ dateFrom, dateTo, converted, search });
+    const total          = sessions.length;
+    const convertedCount = sessions.filter(s => s.is_converted).length;
+    const convRate       = total ? Math.round(convertedCount / total * 100) : 0;
+
+    // Today's sessions
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayCount = sessions.filter(s => new Date(s.updated_at) >= today).length;
+
+    res.json({ ok: true, sessions, total, convertedCount, convRate, todayCount });
+  } catch (err) {
+    console.error('[admin/sessions]', err.message);
+    res.status(500).json({ error: 'Could not fetch sessions' });
   }
 });
 

@@ -212,4 +212,67 @@ function getStats() {
   return { total, today: todayCount, week: weekCount, month: monthCount, bySource, byStatus, topServices, daily };
 }
 
-module.exports = { saveLead, saveSession, getSession, getLeads, updateLead, deleteLead, getStats };
+/**
+ * getSessions — returns all AI chat sessions with metadata, newest first.
+ * @param {object} opts
+ * @param {string} [opts.dateFrom]   — ISO date, inclusive
+ * @param {string} [opts.dateTo]     — ISO date, inclusive (end of day)
+ * @param {string} [opts.converted]  — 'true' | 'false' | undefined
+ * @param {string} [opts.search]     — search in first user message
+ */
+function getSessions({ dateFrom, dateTo, converted, search } = {}) {
+  let sessions = readJSON(sessionsFile);
+
+  sessions = sessions.map(s => {
+    const msgs     = Array.isArray(s.messages) ? s.messages : [];
+    const userMsgs = msgs.filter(m => m.role === 'user');
+    const asstMsgs = msgs.filter(m => m.role === 'assistant');
+    const isConverted = asstMsgs.some(m => typeof m.content === 'string' && m.content.includes('[FORM:'));
+
+    // Extract form data from [FORM:NAME|PHONE|SERVICE|COMMENT]
+    let formData = null;
+    for (const m of asstMsgs) {
+      const match = typeof m.content === 'string' && m.content.match(/\[FORM:([^\]]+)\]/);
+      if (match) {
+        const [name, phone, service, comment] = match[1].split('|');
+        formData = { name, phone, service, comment };
+        break;
+      }
+    }
+
+    return {
+      session_id:        s.session_id,
+      updated_at:        s.updated_at,
+      message_count:     msgs.length,
+      user_message_count: userMsgs.length,
+      is_converted:      isConverted,
+      form_data:         formData,
+      first_message:     (userMsgs[0]?.content || '').slice(0, 120),
+      messages:          msgs,
+    };
+  });
+
+  if (search) {
+    const q = search.toLowerCase();
+    sessions = sessions.filter(s => s.first_message.toLowerCase().includes(q));
+  }
+
+  if (dateFrom) {
+    const from = new Date(dateFrom);
+    sessions = sessions.filter(s => new Date(s.updated_at) >= from);
+  }
+
+  if (dateTo) {
+    const to = new Date(dateTo);
+    to.setHours(23, 59, 59, 999);
+    sessions = sessions.filter(s => new Date(s.updated_at) <= to);
+  }
+
+  if (converted === 'true')  sessions = sessions.filter(s => s.is_converted);
+  if (converted === 'false') sessions = sessions.filter(s => !s.is_converted);
+
+  sessions.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+  return sessions;
+}
+
+module.exports = { saveLead, saveSession, getSession, getLeads, updateLead, deleteLead, getStats, getSessions };
