@@ -866,15 +866,31 @@ function initAgent() {
   if (!widget) return;
 
   // ── Minimize / Expand ──
-  function minimizeAgent() {
+  let _userExpanded = false; // set true when user manually expands — prevents auto-re-minimize
+
+  function showAvatarTooltip() {
+    if (!avatarBtn) return;
+    avatarBtn.classList.add('tooltip-visible');
+    clearTimeout(avatarBtn._tooltipTimer);
+    avatarBtn._tooltipTimer = setTimeout(() => {
+      avatarBtn.classList.remove('tooltip-visible');
+    }, 3500);
+  }
+
+  function minimizeAgent(auto = false) {
+    if (auto && _userExpanded) return; // don't auto-minimize if user explicitly opened
     widget.classList.add('agent-minimizing');
     setTimeout(() => {
       widget.classList.add('agent-minimized');
       widget.classList.remove('agent-minimizing');
     }, 320);
-    if (avatarBtn) avatarBtn.hidden = false;
+    if (avatarBtn) {
+      avatarBtn.hidden = false;
+      showAvatarTooltip();
+    }
   }
   function expandAgent() {
+    _userExpanded = true;
     widget.classList.remove('agent-minimized');
     if (avatarBtn) avatarBtn.hidden = true;
   }
@@ -995,6 +1011,29 @@ function initAgent() {
     io.observe(scrollExp);
     const r = scrollExp.getBoundingClientRect();
     if (r.top < window.innerHeight && r.bottom > 0) widget.classList.add('agent-hidden');
+  }
+
+  // ── Auto-minimize when form section comes into view ──
+  const formSection = document.getElementById('contact-anchor');
+  if (formSection) {
+    let _formWasVisible = false;
+    new IntersectionObserver(entries => {
+      const visible = entries[0].isIntersecting;
+      if (visible && !_formWasVisible) {
+        minimizeAgent(true); // auto=true → respects _userExpanded flag
+      }
+      _formWasVisible = visible;
+    }, { threshold: 0.2 }).observe(formSection);
+  }
+
+  // ── Start minimized on low-perf or slow network ──
+  {
+    const perf = document.body.dataset.perf;
+    const conn = navigator.connection;
+    const slowNet = conn && (conn.saveData || ['slow-2g','2g','3g'].includes(conn.effectiveType));
+    if (perf === 'low' || perf === 'medium' || slowNet) {
+      setTimeout(() => minimizeAgent(false), 600);
+    }
   }
 
   // ── Рандомные подсказки над персонажем ──
