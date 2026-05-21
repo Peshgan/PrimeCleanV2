@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PrimeClean Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & Base ─────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #06080f;
+  --bg2:      #0b0f1a;
+  --card:     rgba(255,255,255,0.04);
+  --card-hov: rgba(255,255,255,0.07);
+  --border:   rgba(255,255,255,0.08);
+  --border2:  rgba(255,255,255,0.14);
+  --blue:     #1a6cff;
+  --blue-dim: rgba(26,108,255,0.18);
+  --cyan:     #00eaff;
+  --cyan-dim: rgba(0,234,255,0.15);
+  --orange:   #ff9500;
+  --green:    #34d399;
+  --red:      #ff4444;
+  --text:     #e8eaf0;
+  --text2:    #8890a8;
+  --text3:    #4a5270;
+  --radius:   12px;
+  --radius-sm: 8px;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+/* ── Login Screen ────────────────────────────────────────────────────────── */
+#login-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(26,108,255,0.12) 0%, transparent 70%), var(--bg);
+}
+
+.login-card {
+  width: 380px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 48px 40px;
+  backdrop-filter: blur(20px);
+  text-align: center;
+}
+
+.login-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 32px;
+  letter-spacing: 3px;
+  background: linear-gradient(135deg, var(--blue), var(--cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+}
+
+.login-sub {
+  color: var(--text2);
+  font-size: 13px;
+  margin-bottom: 36px;
+}
+
+.login-label {
+  display: block;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 8px;
+}
+
+.login-input {
+  width: 100%;
+  padding: 13px 16px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 15px;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  margin-bottom: 20px;
+}
+
+.login-input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px var(--blue-dim);
+}
+
+.login-btn {
+  width: 100%;
+  padding: 13px;
+  background: linear-gradient(135deg, var(--blue), #0d52cc);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+}
+
+.login-btn:hover { opacity: 0.9; }
+.login-btn:active { transform: scale(0.98); }
+
+.login-error {
+  margin-top: 14px;
+  color: var(--red);
+  font-size: 13px;
+  min-height: 18px;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-8px); }
+  40%       { transform: translateX(8px); }
+  60%       { transform: translateX(-5px); }
+  80%       { transform: translateX(5px); }
+}
+.shake { animation: shake 0.4s ease; }
+
+/* ── App Shell ───────────────────────────────────────────────────────────── */
+#app { display: none; flex-direction: column; min-height: 100vh; }
+#app.visible { display: flex; }
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  height: 60px;
+  background: rgba(6,8,15,0.95);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+}
+
+.header-brand {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  letter-spacing: 2px;
+  background: linear-gradient(135deg, var(--blue), var(--cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.header-time {
+  color: var(--text2);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.logout-btn {
+  padding: 7px 16px;
+  background: rgba(255,68,68,0.12);
+  border: 1px solid rgba(255,68,68,0.25);
+  border-radius: var(--radius-sm);
+  color: var(--red);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.logout-btn:hover { background: rgba(255,68,68,0.22); }
+
+/* ── Tabs ────────────────────────────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 16px 28px 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+}
+
+.tab-btn {
+  padding: 10px 22px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text2);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+  margin-bottom: -1px;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+
+/* ── Main Content ────────────────────────────────────────────────────────── */
+.main { flex: 1; padding: 28px; background: var(--bg); }
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── Stat Cards ──────────────────────────────────────────────────────────── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 900px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 500px) { .stat-grid { grid-template-columns: 1fr; } }
+
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  transition: background 0.2s;
+}
+.stat-card:hover { background: var(--card-hov); }
+
+.stat-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 52px;
+  line-height: 1;
+  background: linear-gradient(135deg, var(--blue), var(--cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.stat-label {
+  margin-top: 6px;
+  color: var(--text2);
+  font-size: 13px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+/* ── Dashboard Second Row ────────────────────────────────────────────────── */
+.dash-row {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+@media (max-width: 768px) { .dash-row { grid-template-columns: 1fr; } }
+
+.section-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+}
+
+.section-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text2);
+  margin-bottom: 18px;
+}
+
+/* ── Bar Chart ───────────────────────────────────────────────────────────── */
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  height: 90px;
+}
+
+.bar-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.bar {
+  width: 100%;
+  min-height: 2px;
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(180deg, var(--cyan), var(--blue));
+  transition: height 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  position: relative;
+}
+.bar:hover::after {
+  content: attr(data-val);
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 11px;
+  color: var(--text);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.bar-label {
+  font-size: 9px;
+  color: var(--text3);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Status Pills ────────────────────────────────────────────────────────── */
+.status-pills {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid;
+}
+.status-pill.new        { background: var(--cyan-dim); border-color: var(--cyan); color: var(--cyan); }
+.status-pill.in_progress{ background: rgba(255,149,0,.12); border-color: var(--orange); color: var(--orange); }
+.status-pill.done       { background: rgba(52,211,153,.12); border-color: var(--green); color: var(--green); }
+.status-pill.cancelled  { background: rgba(255,68,68,.10); border-color: var(--red); color: var(--red); }
+
+.pill-count { font-family: 'Bebas Neue', sans-serif; font-size: 18px; line-height: 1; }
+
+/* ── Source Badges ───────────────────────────────────────────────────────── */
+.source-list { display: flex; flex-direction: column; gap: 10px; }
+.source-row  { display: flex; align-items: center; justify-content: space-between; }
+
+.source-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.source-badge.website-form  { background: var(--blue-dim); color: var(--blue); }
+.source-badge.booking-widget{ background: rgba(139,92,246,.15); color: #a78bfa; }
+.source-badge.agent         { background: var(--cyan-dim); color: var(--cyan); }
+.source-badge.other         { background: rgba(255,255,255,.07); color: var(--text2); }
+
+.source-count { font-size: 14px; font-weight: 600; color: var(--text); }
+
+/* ── Top Services ────────────────────────────────────────────────────────── */
+.service-list { display: flex; flex-direction: column; gap: 12px; }
+.service-row  { display: flex; flex-direction: column; gap: 5px; }
+.service-meta { display: flex; justify-content: space-between; }
+.service-name { font-size: 13px; color: var(--text); }
+.service-pct  { font-size: 13px; color: var(--text2); }
+.service-bar-wrap { height: 4px; background: rgba(255,255,255,0.06); border-radius: 99px; overflow: hidden; }
+.service-bar  { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--blue), var(--cyan)); transition: width 0.6s ease; }
+
+/* ── Filter Bar ──────────────────────────────────────────────────────────── */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  padding: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.filter-input, .filter-select {
+  padding: 9px 13px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.filter-input:focus, .filter-select:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px var(--blue-dim);
+}
+.filter-input { min-width: 200px; }
+.filter-select { appearance: none; cursor: pointer; padding-right: 28px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238890a8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; }
+.filter-select option { background: #0b0f1a; }
+
+input[type="date"].filter-input::-webkit-calendar-picker-indicator { filter: invert(0.5); }
+
+.reset-btn {
+  padding: 9px 16px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text2);
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+.reset-btn:hover { background: rgba(255,255,255,0.09); color: var(--text); }
+
+.results-count {
+  margin-bottom: 12px;
+  color: var(--text2);
+  font-size: 13px;
+}
+.results-count span { color: var(--text); font-weight: 600; }
+
+/* ── Table ───────────────────────────────────────────────────────────────── */
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+}
+
+thead th {
+  padding: 13px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--text2);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  background: rgba(255,255,255,0.02);
+}
+
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: rgba(255,255,255,0.025); }
+
+tbody td {
+  padding: 13px 16px;
+  vertical-align: middle;
+  font-size: 13px;
+}
+
+.td-date { color: var(--text2); white-space: nowrap; }
+.td-name { font-weight: 500; }
+.td-phone a { color: var(--cyan); text-decoration: none; }
+.td-phone a:hover { text-decoration: underline; }
+.td-service { color: var(--text2); max-width: 140px; }
+.td-note { color: var(--text2); max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.td-actions { white-space: nowrap; }
+
+/* ── Status Select in Table ──────────────────────────────────────────────── */
+.status-select {
+  appearance: none;
+  border: none;
+  border-radius: 999px;
+  padding: 5px 26px 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='currentColor' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  outline: none;
+  transition: opacity 0.2s;
+}
+.status-select:hover { opacity: 0.85; }
+
+.status-select.new         { background-color: var(--cyan-dim); color: var(--cyan); }
+.status-select.in_progress { background-color: rgba(255,149,0,.15); color: var(--orange); }
+.status-select.done        { background-color: rgba(52,211,153,.12); color: var(--green); }
+.status-select.cancelled   { background-color: rgba(255,68,68,.12); color: var(--red); }
+.status-select option      { background: #0b0f1a; color: var(--text); }
+
+/* ── Action Buttons ──────────────────────────────────────────────────────── */
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.04);
+  color: var(--text2);
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 4px;
+}
+.btn-icon:hover { background: rgba(255,255,255,0.09); color: var(--text); border-color: var(--border2); }
+.btn-icon.del:hover { background: rgba(255,68,68,.15); color: var(--red); border-color: rgba(255,68,68,.3); }
+
+/* ── Empty State ─────────────────────────────────────────────────────────── */
+.empty-state {
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--text2);
+}
+.empty-icon { font-size: 48px; margin-bottom: 16px; }
+.empty-title { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+.empty-sub { font-size: 13px; }
+
+/* ── Pagination ──────────────────────────────────────────────────────────── */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 20px;
+}
+.page-btn {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--text2);
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.page-btn:hover { background: var(--card-hov); color: var(--text); }
+.page-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+.page-btn:disabled { opacity: 0.35; cursor: default; }
+
+/* ── Modal ───────────────────────────────────────────────────────────────── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(6,8,15,0.85);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.open { display: flex; }
+
+.modal {
+  width: 520px;
+  max-width: calc(100vw - 32px);
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  padding: 32px;
+  position: relative;
+  animation: modalIn 0.2s ease;
+}
+@keyframes modalIn { from { opacity:0; transform: scale(0.96) translateY(8px); } to { opacity:1; transform: none; } }
+
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 30px; height: 30px;
+  border: none;
+  background: rgba(255,255,255,0.06);
+  color: var(--text2);
+  font-size: 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.modal-close:hover { background: rgba(255,255,255,0.12); color: var(--text); }
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+.modal-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+@media (max-width: 480px) { .modal-fields { grid-template-columns: 1fr; } }
+
+.modal-field { display: flex; flex-direction: column; gap: 6px; }
+.modal-field.full { grid-column: 1/-1; }
+.modal-field-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text2); }
+.modal-field-val { font-size: 14px; color: var(--text); padding: 10px 13px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.modal-field-val.link { color: var(--cyan); }
+
+.modal-select, .modal-textarea {
+  padding: 10px 13px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.modal-select:focus, .modal-textarea:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px var(--blue-dim);
+}
+.modal-select { appearance: none; cursor: pointer; }
+.modal-select option { background: #0b0f1a; }
+.modal-textarea { resize: vertical; min-height: 90px; }
+
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+.btn-primary {
+  padding: 10px 24px;
+  background: linear-gradient(135deg, var(--blue), #0d52cc);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.btn-primary:hover { opacity: 0.9; }
+
+.btn-secondary {
+  padding: 10px 24px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-secondary:hover { background: rgba(255,255,255,0.1); }
+
+/* ── Toast ───────────────────────────────────────────────────────────────── */
+#toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 999;
+  padding: 12px 20px;
+  background: #1a2035;
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  font-size: 14px;
+  color: var(--text);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.25s, transform 0.25s;
+  pointer-events: none;
+}
+#toast.show { opacity: 1; transform: none; }
+#toast.success { border-color: var(--green); }
+#toast.error   { border-color: var(--red); }
+
+/* ── Loading spinner ─────────────────────────────────────────────────────── */
+.spinner {
+  width: 20px; height: 20px;
+  border: 2px solid var(--border2);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN SCREEN ──────────────────────────────────────────────────────────── -->
+<div id="login-screen">
+  <div class="login-card" id="login-card">
+    <div class="login-logo">PrimeClean</div>
+    <div class="login-sub">Панель управления заявками</div>
+    <label class="login-label" for="login-pass">Пароль</label>
+    <input class="login-input" type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password">
+    <button class="login-btn" id="login-btn">Войти</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- ── APP SHELL ─────────────────────────────────────────────────────────────── -->
+<div id="app">
+  <!-- Header -->
+  <header class="header">
+    <div class="header-brand">PrimeClean Admin</div>
+    <div class="header-right">
+      <div class="header-time" id="header-time"></div>
+      <button class="logout-btn" id="logout-btn">Выйти</button>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="dashboard">Дашборд</button>
+    <button class="tab-btn" data-tab="leads">Заявки</button>
+  </nav>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- ── DASHBOARD TAB ──────────────────────────────────────────────────── -->
+    <div class="tab-panel active" id="tab-dashboard">
+
+      <!-- 4 stat cards -->
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-num" id="s-total">—</div>
+          <div class="stat-label">Всего заявок</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="s-today">—</div>
+          <div class="stat-label">Сегодня</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="s-week">—</div>
+          <div class="stat-label">За 7 дней</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="s-month">—</div>
+          <div class="stat-label">За 30 дней</div>
+        </div>
+      </div>
+
+      <!-- Bar chart + status pills -->
+      <div class="dash-row">
+        <div class="section-card">
+          <div class="section-title">Активность — последние 14 дней</div>
+          <div class="bar-chart" id="bar-chart"></div>
+        </div>
+        <div class="section-card">
+          <div class="section-title">По статусам</div>
+          <div class="status-pills" id="status-pills">
+            <div class="status-pill new">        <span class="pill-count" id="st-new">0</span>Новые</div>
+            <div class="status-pill in_progress"> <span class="pill-count" id="st-inprog">0</span>В работе</div>
+            <div class="status-pill done">        <span class="pill-count" id="st-done">0</span>Выполнены</div>
+            <div class="status-pill cancelled">   <span class="pill-count" id="st-cancel">0</span>Отменены</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top services + sources -->
+      <div class="dash-row">
+        <div class="section-card">
+          <div class="section-title">Топ услуг</div>
+          <div class="service-list" id="top-services"></div>
+        </div>
+        <div class="section-card">
+          <div class="section-title">По источникам</div>
+          <div class="source-list" id="by-source"></div>
+        </div>
+      </div>
+
+    </div><!-- /tab-dashboard -->
+
+    <!-- ── LEADS TAB ──────────────────────────────────────────────────────── -->
+    <div class="tab-panel" id="tab-leads">
+
+      <!-- Filters -->
+      <div class="filter-bar">
+        <input class="filter-input" type="text"   id="f-search"  placeholder="Имя или телефон...">
+        <select class="filter-select" id="f-service">
+          <option value="">Все услуги</option>
+          <option value="Уборка квартиры">Уборка квартиры</option>
+          <option value="Уборка дома">Уборка дома</option>
+          <option value="Мытьё окон">Мытьё окон</option>
+          <option value="Химчистка мебели">Химчистка мебели</option>
+          <option value="Уборка после ремонта">Уборка после ремонта</option>
+          <option value="Генеральная уборка">Генеральная уборка</option>
+        </select>
+        <select class="filter-select" id="f-source">
+          <option value="">Все источники</option>
+          <option value="website-form">Форма</option>
+          <option value="booking-widget">Бронирование</option>
+          <option value="agent">Агент</option>
+        </select>
+        <select class="filter-select" id="f-status">
+          <option value="">Все статусы</option>
+          <option value="new">Новые</option>
+          <option value="in_progress">В работе</option>
+          <option value="done">Выполнены</option>
+          <option value="cancelled">Отменены</option>
+        </select>
+        <input class="filter-input" type="date" id="f-from" style="min-width:auto;width:150px">
+        <input class="filter-input" type="date" id="f-to"   style="min-width:auto;width:150px">
+        <button class="reset-btn" id="f-reset">Сбросить</button>
+      </div>
+
+      <div class="results-count" id="results-count">Загрузка...</div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Дата</th>
+              <th>Имя</th>
+              <th>Телефон</th>
+              <th>Услуга</th>
+              <th>Источник</th>
+              <th>Статус</th>
+              <th>Комментарий</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody id="leads-tbody"></tbody>
+        </table>
+        <div id="leads-empty" class="empty-state" style="display:none">
+          <div class="empty-icon">📋</div>
+          <div class="empty-title">Заявок пока нет</div>
+          <div class="empty-sub">Попробуйте изменить фильтры или подождите первых обращений</div>
+        </div>
+      </div>
+
+      <div class="pagination" id="pagination"></div>
+
+    </div><!-- /tab-leads -->
+
+  </main>
+</div><!-- /app -->
+
+<!-- ── EDIT MODAL ────────────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <button class="modal-close" id="modal-close">✕</button>
+    <div class="modal-title">Редактировать заявку</div>
+    <div class="modal-fields">
+      <div class="modal-field">
+        <div class="modal-field-label">Имя</div>
+        <div class="modal-field-val" id="m-name"></div>
+      </div>
+      <div class="modal-field">
+        <div class="modal-field-label">Телефон</div>
+        <div class="modal-field-val link" id="m-phone"></div>
+      </div>
+      <div class="modal-field">
+        <div class="modal-field-label">Услуга</div>
+        <div class="modal-field-val" id="m-service"></div>
+      </div>
+      <div class="modal-field">
+        <div class="modal-field-label">Источник</div>
+        <div class="modal-field-val" id="m-source"></div>
+      </div>
+      <div class="modal-field">
+        <div class="modal-field-label">Дата заявки</div>
+        <div class="modal-field-val" id="m-date"></div>
+      </div>
+      <div class="modal-field">
+        <div class="modal-field-label">Статус</div>
+        <select class="modal-select" id="m-status">
+          <option value="new">Новая</option>
+          <option value="in_progress">В работе</option>
+          <option value="done">Выполнена</option>
+          <option value="cancelled">Отменена</option>
+        </select>
+      </div>
+      <div class="modal-field full">
+        <div class="modal-field-label">Сообщение клиента</div>
+        <div class="modal-field-val" id="m-message" style="white-space:pre-wrap;"></div>
+      </div>
+      <div class="modal-field full">
+        <div class="modal-field-label">Внутренний комментарий</div>
+        <textarea class="modal-textarea" id="m-notes" placeholder="Заметки для внутреннего использования..."></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="modal-cancel">Отмена</button>
+      <button class="btn-primary" id="modal-save">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── TOAST ─────────────────────────────────────────────────────────────────── -->
+<div id="toast"></div>
+
+<script>
+'use strict';
+
+const API_URL = 'https://primeclean-production-75e1.up.railway.app';
+const TOKEN_KEY = 'pc_admin_token';
+const PAGE_SIZE  = 50;
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let token        = localStorage.getItem(TOKEN_KEY) || '';
+let allLeads     = [];
+let filteredLeads = [];
+let currentPage  = 1;
+let editingId    = null;
+let dashRefreshTimer = null;
+let searchDebounce   = null;
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function api(path, opts = {}) {
+  return fetch(API_URL + path, {
+    ...opts,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token,
+      ...(opts.headers || {}),
+    },
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  }).then(r => r.json());
+}
+
+function showToast(msg, type = 'success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show ' + type;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function formatDate(iso) {
+  const d = new Date(iso);
+  const day  = d.getDate();
+  const months = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+  const hh = String(d.getHours()).padStart(2,'0');
+  const mm = String(d.getMinutes()).padStart(2,'0');
+  return `${day} ${months[d.getMonth()]} ${hh}:${mm}`;
+}
+
+const STATUS_LABELS  = { new:'Новая', in_progress:'В работе', done:'Выполнена', cancelled:'Отменена' };
+const SOURCE_LABELS  = { 'website-form':'Форма', 'booking-widget':'Бронирование', agent:'Агент' };
+const SOURCE_CLASS   = { 'website-form':'website-form', 'booking-widget':'booking-widget', agent:'agent' };
+
+function sourceBadge(src) {
+  const label = SOURCE_LABELS[src] || src || 'Сайт';
+  const cls   = SOURCE_CLASS[src]  || 'other';
+  return `<span class="source-badge ${cls}">${label}</span>`;
+}
+
+// ── Live clock ────────────────────────────────────────────────────────────────
+
+function updateClock() {
+  const now = new Date();
+  const opts = { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' };
+  document.getElementById('header-time').textContent = now.toLocaleString('ru-RU', opts);
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').classList.add('visible');
+  loadDashboard();
+}
+
+function showLogin() {
+  token = '';
+  localStorage.removeItem(TOKEN_KEY);
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('login-screen').style.display = '';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-error').textContent = '';
+  clearInterval(dashRefreshTimer);
+}
+
+document.getElementById('login-btn').addEventListener('click', doLogin);
+document.getElementById('login-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+async function doLogin() {
+  const pass = document.getElementById('login-pass').value.trim();
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = '';
+  if (!pass) { errEl.textContent = 'Введите пароль'; return; }
+
+  const data = await fetch(API_URL + '/api/admin/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password: pass }),
+  }).then(r => r.json()).catch(() => ({ ok: false, error: 'Нет связи с сервером' }));
+
+  if (data.ok) {
+    token = data.token;
+    localStorage.setItem(TOKEN_KEY, token);
+    showApp();
+  } else {
+    errEl.textContent = data.error || 'Неверный пароль';
+    const card = document.getElementById('login-card');
+    card.classList.remove('shake');
+    void card.offsetWidth;
+    card.classList.add('shake');
+  }
+}
+
+document.getElementById('logout-btn').addEventListener('click', showLogin);
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    const tab = btn.dataset.tab;
+    document.getElementById('tab-' + tab).classList.add('active');
+
+    if (tab === 'dashboard') {
+      loadDashboard();
+    } else if (tab === 'leads') {
+      clearInterval(dashRefreshTimer);
+      loadLeads();
+    }
+  });
+});
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+
+async function loadDashboard() {
+  clearInterval(dashRefreshTimer);
+  await fetchStats();
+  dashRefreshTimer = setInterval(fetchStats, 60000);
+}
+
+async function fetchStats() {
+  const data = await api('/api/admin/stats').catch(() => null);
+  if (!data || !data.ok) return;
+  const s = data.stats;
+
+  document.getElementById('s-total').textContent = s.total;
+  document.getElementById('s-today').textContent = s.today;
+  document.getElementById('s-week').textContent  = s.week;
+  document.getElementById('s-month').textContent = s.month;
+
+  document.getElementById('st-new').textContent    = s.byStatus.new;
+  document.getElementById('st-inprog').textContent = s.byStatus.in_progress;
+  document.getElementById('st-done').textContent   = s.byStatus.done;
+  document.getElementById('st-cancel').textContent = s.byStatus.cancelled;
+
+  // Bar chart
+  renderBarChart(s.daily);
+
+  // Top services
+  const svcEl = document.getElementById('top-services');
+  if (s.topServices.length === 0) {
+    svcEl.innerHTML = '<div style="color:var(--text2);font-size:13px;">Нет данных</div>';
+  } else {
+    svcEl.innerHTML = s.topServices.map(sv => `
+      <div class="service-row">
+        <div class="service-meta">
+          <span class="service-name">${sv.name}</span>
+          <span class="service-pct">${sv.count} (${sv.pct}%)</span>
+        </div>
+        <div class="service-bar-wrap">
+          <div class="service-bar" style="width:${sv.pct}%"></div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // By source
+  const srcEl = document.getElementById('by-source');
+  const srcs = Object.entries(s.bySource);
+  if (srcs.length === 0) {
+    srcEl.innerHTML = '<div style="color:var(--text2);font-size:13px;">Нет данных</div>';
+  } else {
+    srcEl.innerHTML = srcs.map(([src, cnt]) => `
+      <div class="source-row">
+        ${sourceBadge(src)}
+        <span class="source-count">${cnt}</span>
+      </div>
+    `).join('');
+  }
+}
+
+function renderBarChart(daily) {
+  const wrap = document.getElementById('bar-chart');
+  if (!daily || daily.length === 0) { wrap.innerHTML = ''; return; }
+  const max = Math.max(...daily.map(d => d.count), 1);
+  wrap.innerHTML = daily.map(d => {
+    const pct  = Math.round(d.count / max * 100);
+    const label = d.date.slice(5); // MM-DD
+    return `
+      <div class="bar-wrap">
+        <div class="bar" style="height:${Math.max(pct,2)}%" data-val="${d.count}"></div>
+        <div class="bar-label">${label}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── Leads ─────────────────────────────────────────────────────────────────────
+
+async function loadLeads() {
+  document.getElementById('results-count').textContent = 'Загрузка...';
+  const params = buildParams();
+  const qs = new URLSearchParams(params).toString();
+  const data = await api('/api/admin/leads' + (qs ? '?' + qs : '')).catch(() => null);
+  if (!data || !data.ok) {
+    document.getElementById('results-count').textContent = 'Ошибка загрузки';
+    return;
+  }
+  allLeads = data.leads;
+  filteredLeads = allLeads;
+  currentPage = 1;
+  renderLeads();
+}
+
+function buildParams() {
+  const p = {};
+  const search = document.getElementById('f-search').value.trim();
+  const service = document.getElementById('f-service').value;
+  const source  = document.getElementById('f-source').value;
+  const status  = document.getElementById('f-status').value;
+  const from    = document.getElementById('f-from').value;
+  const to      = document.getElementById('f-to').value;
+  if (search)  p.search  = search;
+  if (service) p.service = service;
+  if (source)  p.source  = source;
+  if (status)  p.status  = status;
+  if (from)    p.dateFrom = from;
+  if (to)      p.dateTo   = to;
+  return p;
+}
+
+function renderLeads() {
+  const tbody  = document.getElementById('leads-tbody');
+  const emptyEl = document.getElementById('leads-empty');
+  const countEl = document.getElementById('results-count');
+  const total  = filteredLeads.length;
+
+  countEl.innerHTML = `Показано <span>${Math.min(PAGE_SIZE, total)}</span> из <span>${total}</span> заявок`;
+
+  if (total === 0) {
+    tbody.innerHTML = '';
+    emptyEl.style.display = '';
+    renderPagination(0);
+    return;
+  }
+  emptyEl.style.display = 'none';
+
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const page  = filteredLeads.slice(start, start + PAGE_SIZE);
+
+  tbody.innerHTML = page.map(lead => {
+    const noteTrunc = (lead.notes || '').length > 50
+      ? (lead.notes || '').slice(0, 50) + '…'
+      : (lead.notes || '—');
+    const noteTitle = (lead.notes || '').replace(/"/g, '&quot;');
+    return `
+      <tr data-id="${lead.id}">
+        <td class="td-date">${formatDate(lead.created_at)}</td>
+        <td class="td-name">${esc(lead.name || '—')}</td>
+        <td class="td-phone"><a href="tel:${esc(lead.phone)}">${esc(lead.phone)}</a></td>
+        <td class="td-service">${esc(lead.service || '—')}</td>
+        <td>${sourceBadge(lead.source)}</td>
+        <td>
+          <select class="status-select ${lead.status || 'new'}" data-id="${lead.id}" onchange="onStatusChange(this)">
+            <option value="new"         ${lead.status==='new'?'selected':''}>Новая</option>
+            <option value="in_progress" ${lead.status==='in_progress'?'selected':''}>В работе</option>
+            <option value="done"        ${lead.status==='done'?'selected':''}>Выполнена</option>
+            <option value="cancelled"   ${lead.status==='cancelled'?'selected':''}>Отменена</option>
+          </select>
+        </td>
+        <td class="td-note" title="${noteTitle}">${esc(noteTrunc)}</td>
+        <td class="td-actions">
+          <button class="btn-icon" title="Редактировать" onclick="openEdit(${lead.id})">✏</button>
+          <button class="btn-icon del" title="Удалить" onclick="deleteLead(${lead.id})">🗑</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  renderPagination(total);
+}
+
+function renderPagination(total) {
+  const pages = Math.ceil(total / PAGE_SIZE);
+  const el = document.getElementById('pagination');
+  if (pages <= 1) { el.innerHTML = ''; return; }
+
+  let html = '';
+  html += `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
+  for (let i = 1; i <= pages; i++) {
+    if (i === 1 || i === pages || Math.abs(i - currentPage) <= 1) {
+      html += `<button class="page-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+    } else if (Math.abs(i - currentPage) === 2) {
+      html += `<span style="color:var(--text3);padding:0 4px">…</span>`;
+    }
+  }
+  html += `<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===pages?'disabled':''}>›</button>`;
+  el.innerHTML = html;
+}
+
+function goPage(p) {
+  const pages = Math.ceil(filteredLeads.length / PAGE_SIZE);
+  if (p < 1 || p > pages) return;
+  currentPage = p;
+  renderLeads();
+  document.querySelector('.table-wrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function esc(str) {
+  return String(str || '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// ── Filters ───────────────────────────────────────────────────────────────────
+
+document.getElementById('f-search').addEventListener('input', () => {
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(loadLeads, 300);
+});
+
+['f-service','f-source','f-status','f-from','f-to'].forEach(id => {
+  document.getElementById(id).addEventListener('change', loadLeads);
+});
+
+document.getElementById('f-reset').addEventListener('click', () => {
+  ['f-search','f-from','f-to'].forEach(id => document.getElementById(id).value = '');
+  ['f-service','f-source','f-status'].forEach(id => document.getElementById(id).value = '');
+  loadLeads();
+});
+
+// ── Status change inline ──────────────────────────────────────────────────────
+
+async function onStatusChange(sel) {
+  const id     = sel.dataset.id;
+  const status = sel.value;
+  sel.className = 'status-select ' + status;
+
+  const data = await api('/api/admin/leads/' + id, {
+    method: 'PUT',
+    body:   { status },
+  }).catch(() => null);
+
+  if (data && data.ok) {
+    // Update in local array
+    const lead = allLeads.find(l => String(l.id) === String(id));
+    if (lead) lead.status = status;
+    showToast('Статус обновлён');
+  } else {
+    showToast('Ошибка обновления', 'error');
+  }
+}
+
+// ── Delete lead ───────────────────────────────────────────────────────────────
+
+async function deleteLead(id) {
+  if (!confirm('Удалить эту заявку? Действие необратимо.')) return;
+
+  const data = await api('/api/admin/leads/' + id, { method: 'DELETE' }).catch(() => null);
+  if (data && data.ok) {
+    allLeads      = allLeads.filter(l => l.id !== id);
+    filteredLeads = filteredLeads.filter(l => l.id !== id);
+    renderLeads();
+    showToast('Заявка удалена');
+  } else {
+    showToast('Ошибка удаления', 'error');
+  }
+}
+
+// ── Edit modal ────────────────────────────────────────────────────────────────
+
+function openEdit(id) {
+  const lead = allLeads.find(l => l.id === id);
+  if (!lead) return;
+  editingId = id;
+
+  document.getElementById('m-name').textContent    = lead.name    || '—';
+  document.getElementById('m-phone').textContent   = lead.phone   || '—';
+  document.getElementById('m-service').textContent = lead.service || '—';
+  document.getElementById('m-source').textContent  = SOURCE_LABELS[lead.source] || lead.source || '—';
+  document.getElementById('m-date').textContent    = formatDate(lead.created_at);
+  document.getElementById('m-message').textContent = lead.message || '—';
+  document.getElementById('m-status').value        = lead.status  || 'new';
+  document.getElementById('m-notes').value         = lead.notes   || '';
+
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('m-notes').focus();
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  editingId = null;
+}
+
+document.getElementById('modal-close').addEventListener('click', closeModal);
+document.getElementById('modal-cancel').addEventListener('click', closeModal);
+document.getElementById('modal-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+});
+
+document.getElementById('modal-save').addEventListener('click', async () => {
+  if (!editingId) return;
+  const status = document.getElementById('m-status').value;
+  const notes  = document.getElementById('m-notes').value;
+
+  const data = await api('/api/admin/leads/' + editingId, {
+    method: 'PUT',
+    body:   { status, notes },
+  }).catch(() => null);
+
+  if (data && data.ok) {
+    const lead = allLeads.find(l => l.id === editingId);
+    if (lead) { lead.status = status; lead.notes = notes; }
+    renderLeads();
+    closeModal();
+    showToast('Заявка сохранена');
+  } else {
+    showToast('Ошибка сохранения', 'error');
+  }
+});
+
+// ── Keyboard shortcuts ────────────────────────────────────────────────────────
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+
+if (token) {
+  showApp();
+} else {
+  document.getElementById('login-pass').focus();
+}
+</script>
+</body>
+</html>

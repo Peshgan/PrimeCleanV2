@@ -5,10 +5,12 @@ const express    = require('express');
 const cors       = require('cors');
 const compression = require('compression');
 const rateLimit  = require('express-rate-limit');
+const path       = require('path');
 
 const chatRoutes    = require('./routes/chat');
 const leadsRoutes   = require('./routes/leads');
 const webhookRoutes = require('./routes/webhook');
+const adminRoutes   = require('./routes/admin');
 
 const app  = express();
 const PORT = process.env.PORT || 4000;
@@ -28,6 +30,9 @@ app.use(cors({ origin: allowedOrigins }));
 // ── JSON body ──
 app.use(express.json({ limit: '32kb' }));
 
+// ── Serve admin static files ──
+app.use(express.static(path.join(__dirname, '../public')));
+
 // ── Global rate limit (broad abuse protection) ──
 app.use(rateLimit({
   windowMs: 60 * 1000,   // 1 minute
@@ -41,6 +46,10 @@ app.use(rateLimit({
 app.use('/api/chat',     chatRoutes);
 app.use('/api/leads',    leadsRoutes);
 app.use('/api/telegram', webhookRoutes);
+app.use('/api/admin',    adminRoutes);
+
+// ── Admin panel HTML ──
+app.get('/admin', (_req, res) => res.sendFile(path.join(__dirname, '../public/admin.html')));
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 

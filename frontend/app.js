@@ -867,24 +867,28 @@ function initAgent() {
 
   // ── Minimize / Expand ──
   function minimizeAgent() {
-    widget.style.opacity = '0';
-    widget.style.transform = 'translateY(20px) scale(0.9)';
-    widget.style.pointerEvents = 'none';
-    setTimeout(() => { widget.hidden = true; }, 300);
-    if (avatarBtn) {
-      avatarBtn.hidden = false;
-      avatarBtn.style.display = '';
-    }
+    widget.classList.add('agent-minimizing');
+    setTimeout(() => {
+      widget.classList.add('agent-minimized');
+      widget.classList.remove('agent-minimizing');
+    }, 320);
+    if (avatarBtn) avatarBtn.hidden = false;
   }
   function expandAgent() {
+    widget.classList.remove('agent-minimized');
     if (avatarBtn) avatarBtn.hidden = true;
-    widget.hidden = false;
-    widget.style.opacity = '';
-    widget.style.transform = '';
-    widget.style.pointerEvents = '';
   }
-  minimizeBtn?.addEventListener('click', e => { e.stopPropagation(); minimizeAgent(); });
+  if (minimizeBtn) {
+    ['click', 'touchend'].forEach(ev => {
+      minimizeBtn.addEventListener(ev, e => {
+        e.preventDefault();
+        e.stopPropagation();
+        minimizeAgent();
+      }, { passive: false });
+    });
+  }
   avatarBtn?.addEventListener('click', expandAgent);
+  avatarBtn?.addEventListener('touchend', e => { e.preventDefault(); expandAgent(); }, { passive: false });
 
 
   // ── API: all AI requests go through backend (API key stays server-side) ──

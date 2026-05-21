@@ -1445,6 +1445,17 @@ body[data-perf="low"] #pl-sound       { backdrop-filter: none; }
   to   { opacity: 1; transform: scale(1); }
 }
 
+/* ── Widget minimize states ── */
+.agent-widget.agent-minimizing {
+  opacity: 0;
+  transform: translateY(20px) scale(0.88);
+  pointer-events: none;
+  transition: opacity .32s ease, transform .32s cubic-bezier(.4,0,.2,1);
+}
+.agent-widget.agent-minimized {
+  display: none !important;
+}
+
 /* ── Character ── */
 .agent-character {
   position: relative;
