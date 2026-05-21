@@ -933,6 +933,106 @@ tbody td {
   text-align: right;
 }
 .chat-bubble.assistant .chat-bubble-meta { text-align: left; }
+
+/* ── Abuse Tab ───────────────────────────────────────────────────────────── */
+.abuse-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+@media (max-width: 600px) { .abuse-stat-grid { grid-template-columns: 1fr; } }
+
+.abuse-ip-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--red);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.abuse-ip-card:hover { background: var(--card-hov); }
+
+.abuse-ip-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.abuse-ip-addr {
+  font-family: 'Courier New', monospace;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  background: rgba(255,68,68,0.1);
+  border: 1px solid rgba(255,68,68,0.25);
+  border-radius: 6px;
+  padding: 4px 10px;
+}
+
+.abuse-count-badge {
+  background: rgba(255,68,68,0.15);
+  border: 1px solid rgba(255,68,68,0.3);
+  color: var(--red);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.abuse-source-badge {
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.abuse-source-badge.chat { background: var(--cyan-dim); color: var(--cyan); }
+.abuse-source-badge.form { background: var(--blue-dim); color: var(--blue); }
+.abuse-source-badge.both { background: rgba(255,149,0,.12); color: var(--orange); }
+
+.abuse-dates {
+  font-size: 12px;
+  color: var(--text3);
+  margin-left: auto;
+}
+
+.abuse-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.abuse-msg-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 12px;
+  background: rgba(255,68,68,0.06);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+}
+
+.abuse-msg-src {
+  flex-shrink: 0;
+  font-weight: 600;
+  color: var(--text2);
+  min-width: 36px;
+}
+
+.abuse-msg-text {
+  color: var(--text);
+  word-break: break-word;
+  flex: 1;
+}
+
+.abuse-msg-time {
+  flex-shrink: 0;
+  color: var(--text3);
+  white-space: nowrap;
+}
 </style>
 </head>
 <body>
@@ -965,6 +1065,7 @@ tbody td {
     <button class="tab-btn active" data-tab="dashboard">Дашборд</button>
     <button class="tab-btn" data-tab="leads">Заявки</button>
     <button class="tab-btn" data-tab="sessions">Сессии AI</button>
+    <button class="tab-btn" data-tab="abuse">Нарушители</button>
   </nav>
 
   <!-- Main -->
@@ -1129,6 +1230,42 @@ tbody td {
       </div>
 
     </div><!-- /tab-sessions -->
+
+    <!-- ── ABUSE TAB ────────────────────────────────────────────────────── -->
+    <div class="tab-panel" id="tab-abuse">
+
+      <div class="abuse-stat-grid">
+        <div class="stat-card">
+          <div class="stat-num" id="ab-total">—</div>
+          <div class="stat-label">Всего инцидентов</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="ab-ips">—</div>
+          <div class="stat-label">Уникальных IP</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="ab-today">—</div>
+          <div class="stat-label">Сегодня</div>
+        </div>
+      </div>
+
+      <div class="filter-bar" style="margin-bottom:16px">
+        <input class="filter-input" type="date" id="ab-from" style="min-width:auto;width:150px">
+        <input class="filter-input" type="date" id="ab-to"   style="min-width:auto;width:150px">
+        <button class="reset-btn" id="ab-reset">Сбросить</button>
+      </div>
+
+      <div class="results-count" id="ab-count">Загрузка...</div>
+
+      <div id="ab-list"></div>
+
+      <div id="ab-empty" class="empty-state" style="display:none">
+        <div class="empty-icon">😊</div>
+        <div class="empty-title">Нарушителей нет</div>
+        <div class="empty-sub">Матерщинников пока не поймали</div>
+      </div>
+
+    </div><!-- /tab-abuse -->
 
   </main>
 </div><!-- /app -->
@@ -1337,6 +1474,9 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     } else if (tab === 'sessions') {
       clearInterval(dashRefreshTimer);
       loadSessions();
+    } else if (tab === 'abuse') {
+      clearInterval(dashRefreshTimer);
+      loadAbuse();
     }
   });
 });
@@ -1782,6 +1922,85 @@ function closeChatModal() {
 document.getElementById('cm-close').addEventListener('click', closeChatModal);
 document.getElementById('chat-modal-overlay').addEventListener('click', e => {
   if (e.target === document.getElementById('chat-modal-overlay')) closeChatModal();
+});
+
+// ── Abuse / Нарушители ────────────────────────────────────────────────────────
+
+async function loadAbuse() {
+  document.getElementById('ab-count').textContent = 'Загрузка...';
+  document.getElementById('ab-list').innerHTML = '';
+  document.getElementById('ab-empty').style.display = 'none';
+
+  const params = {};
+  const from = document.getElementById('ab-from').value;
+  const to   = document.getElementById('ab-to').value;
+  if (from) params.dateFrom = from;
+  if (to)   params.dateTo   = to;
+
+  const qs   = new URLSearchParams(params).toString();
+  const data = await api('/api/admin/abuse' + (qs ? '?' + qs : '')).catch(() => null);
+
+  if (!data || !data.ok) {
+    document.getElementById('ab-count').textContent = 'Ошибка загрузки';
+    return;
+  }
+
+  document.getElementById('ab-total').textContent = data.total;
+  document.getElementById('ab-ips').textContent   = data.uniqueIPs;
+  document.getElementById('ab-today').textContent = data.todayCount;
+
+  if (data.uniqueIPs === 0) {
+    document.getElementById('ab-count').textContent = 'Нарушителей не найдено';
+    document.getElementById('ab-empty').style.display = '';
+    return;
+  }
+
+  document.getElementById('ab-count').innerHTML =
+    `<span>${data.uniqueIPs}</span> уникальных IP — всего <span>${data.total}</span> инцидентов`;
+
+  document.getElementById('ab-list').innerHTML = data.byIP.map(rec => {
+    const srcSet   = rec.sources || [];
+    const srcClass = srcSet.includes('chat') && srcSet.includes('form') ? 'both'
+                   : srcSet.includes('chat') ? 'chat' : 'form';
+    const srcLabel = srcSet.includes('chat') && srcSet.includes('form') ? 'Чат + Форма'
+                   : srcSet.includes('chat') ? 'Чат' : 'Форма';
+
+    const msgs = (rec.events || []).slice(0, 5).map(e => `
+      <div class="abuse-msg-row">
+        <span class="abuse-msg-src">${e.source === 'chat' ? '💬' : '📋'}</span>
+        <span class="abuse-msg-text">${esc(e.message_preview)}</span>
+        <span class="abuse-msg-time">${formatDate(e.detected_at)}</span>
+      </div>
+    `).join('');
+
+    const moreCount = (rec.events || []).length - 5;
+
+    return `
+      <div class="abuse-ip-card">
+        <div class="abuse-ip-header">
+          <span class="abuse-ip-addr">${esc(rec.ip)}</span>
+          <span class="abuse-count-badge">${rec.count} инцид.</span>
+          <span class="abuse-source-badge ${srcClass}">${srcLabel}</span>
+          <span class="abuse-dates">
+            Первый: ${formatDate(rec.first_seen)}<br>
+            Последний: ${formatDate(rec.last_seen)}
+          </span>
+        </div>
+        <div class="abuse-messages">
+          ${msgs}
+          ${moreCount > 0 ? `<div style="font-size:12px;color:var(--text3);padding:4px 12px">… и ещё ${moreCount} сообщений</div>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+document.getElementById('ab-from').addEventListener('change', loadAbuse);
+document.getElementById('ab-to').addEventListener('change', loadAbuse);
+document.getElementById('ab-reset').addEventListener('click', () => {
+  document.getElementById('ab-from').value = '';
+  document.getElementById('ab-to').value   = '';
+  loadAbuse();
 });
 
 // ── Init ──────────────────────────────────────────────────────────────────────

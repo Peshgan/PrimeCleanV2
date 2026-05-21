@@ -893,6 +893,8 @@ function initAgent() {
 
   // ── API: all AI requests go through backend (API key stays server-side) ──
   const CHAT_URL = API_URL + '/api/chat';
+  // Unique session ID per page load — sent to backend for session storage & abuse tracking
+  const SESSION_ID = Math.random().toString(36).slice(2) + Date.now().toString(36);
 
   let state           = 'idle';
   let greeted         = false;
@@ -1199,13 +1201,16 @@ function initAgent() {
 
   // ── Form prefill ──
   function extractFormMarker(text) {
-    const match = text.match(/\[FORM:([^|]*)\|([^|]*)\|([^|]*)\|([^\]]*)\]/);
+    // Format: [FORM:NAME|PHONE|SERVICE|COMMENT|DATE|TIME]  (date/time optional)
+    const match = text.match(/\[FORM:([^|]*)\|([^|]*)\|([^|]*)\|([^|\]]*)\|?([^|\]]*)\|?([^\]]*)\]/);
     if (!match) return null;
     return {
       name:    match[1].trim(),
       phone:   match[2].trim(),
       service: match[3].trim(),
       comment: match[4].trim(),
+      date:    match[5]?.trim() || '',
+      time:    match[6]?.trim() || '',
       clean:   text.replace(/\[FORM:[^\]]*\]/g, '').trim(),
     };
   }
@@ -1232,6 +1237,22 @@ function initAgent() {
     }
 
     if (textarea && data.comment) textarea.value = data.comment;
+
+    // Date input
+    const dateInput = document.getElementById('date-input');
+    if (dateInput && data.date && /^\d{4}-\d{2}-\d{2}$/.test(data.date)) {
+      dateInput.value = data.date;
+      // Trigger discount badge if date is ≥ min
+      dateInput.dispatchEvent(new Event('change'));
+    }
+
+    // Time select — find closest matching option
+    const timeInput = document.getElementById('time-input');
+    if (timeInput && data.time) {
+      const hour = data.time.slice(0, 5); // "HH:00"
+      const opt  = Array.from(timeInput.options).find(o => o.value === hour);
+      if (opt) timeInput.value = opt.value;
+    }
 
     // Scroll to form and flash highlight
     const section = document.getElementById('contact-anchor');
@@ -1275,7 +1296,7 @@ function initAgent() {
       const res  = await fetch(CHAT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: history }),
+        body: JSON.stringify({ messages: history, sessionId: SESSION_ID }),
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data   = await res.json();
@@ -1559,8 +1580,11 @@ function initForm(PERF = 'high') {
   // ── Form submit ──
   const form = document.getElementById('contact-form');
   if (!form) return;
+  let isSubmitting = false;
   form.addEventListener('submit', async e => {
     e.preventDefault();
+    if (isSubmitting) return;
+    isSubmitting = true;
     playLidSound();
     const btn = document.getElementById('form-btn');
     btn.classList.add('sent');
@@ -1593,11 +1617,12 @@ function initForm(PERF = 'high') {
     }
 
     showSuccess();
+    form.reset();
+    if (discountBadge) discountBadge.hidden = true;
     btn.classList.remove('sent');
     btn.querySelector('span').textContent = 'Отправить заявку';
     btn.disabled = false;
-    form.reset();
-    if (discountBadge) discountBadge.hidden = true;
+    isSubmitting = false;
   });
 }
 

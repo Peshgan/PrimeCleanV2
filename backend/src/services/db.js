@@ -7,6 +7,7 @@ fs.mkdirSync(dataDir, { recursive: true });
 
 const leadsFile    = path.join(dataDir, 'leads.json');
 const sessionsFile = path.join(dataDir, 'sessions.json');
+const abuseFile    = path.join(dataDir, 'abuse.json');
 
 function readJSON(file) {
   try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return []; }
@@ -18,7 +19,7 @@ function writeJSON(file, data) {
 
 // ── Existing functions ────────────────────────────────────────────────────────
 
-function saveLead({ name, phone, service, message, source }) {
+function saveLead({ name, phone, service, message, source, ip }) {
   const leads = readJSON(leadsFile);
   const lead = {
     id: Date.now(),
@@ -27,6 +28,7 @@ function saveLead({ name, phone, service, message, source }) {
     service,
     message,
     source: source || 'website-form',
+    ip: ip || null,
     status: 'new',
     notes: '',
     created_at: new Date().toISOString(),
@@ -36,10 +38,18 @@ function saveLead({ name, phone, service, message, source }) {
   return lead;
 }
 
-function saveSession(sessionId, messages) {
+function saveSession(sessionId, messages, ip = null) {
   const sessions = readJSON(sessionsFile);
-  const idx = sessions.findIndex(s => s.session_id === sessionId);
-  const entry = { session_id: sessionId, messages, updated_at: new Date().toISOString() };
+  const idx      = sessions.findIndex(s => s.session_id === sessionId);
+  const existing = idx >= 0 ? sessions[idx] : {};
+  const entry = {
+    ...existing,
+    session_id:  sessionId,
+    messages,
+    ip:          ip || existing.ip || null,
+    updated_at:  new Date().toISOString(),
+    created_at:  existing.created_at || new Date().toISOString(),
+  };
   if (idx >= 0) sessions[idx] = entry; else sessions.push(entry);
   writeJSON(sessionsFile, sessions);
 }
@@ -213,6 +223,83 @@ function getStats() {
 }
 
 /**
+ * logAbuse — record a profanity/abuse event.
+ * @param {object} opts
+ * @param {string} opts.ip
+ * @param {string} [opts.session_id]
+ * @param {string} opts.source      — 'chat' | 'form'
+ * @param {string} opts.message_preview
+ */
+function logAbuse({ ip, session_id, source, message_preview }) {
+  const log = readJSON(abuseFile);
+  log.push({
+    id:              Date.now(),
+    ip:              ip || 'unknown',
+    session_id:      session_id || null,
+    source:          source || 'chat',
+    message_preview: String(message_preview || '').slice(0, 200),
+    detected_at:     new Date().toISOString(),
+  });
+  writeJSON(abuseFile, log);
+}
+
+/**
+ * getAbuseLog — returns abuse events, newest first, with per-IP summary.
+ * @param {object} [opts]
+ * @param {string} [opts.dateFrom]
+ * @param {string} [opts.dateTo]
+ * @param {string} [opts.ip]       — filter by specific IP
+ */
+function getAbuseLog({ dateFrom, dateTo, ip } = {}) {
+  let events = readJSON(abuseFile);
+
+  if (dateFrom) {
+    const from = new Date(dateFrom);
+    events = events.filter(e => new Date(e.detected_at) >= from);
+  }
+  if (dateTo) {
+    const to = new Date(dateTo);
+    to.setHours(23, 59, 59, 999);
+    events = events.filter(e => new Date(e.detected_at) <= to);
+  }
+  if (ip) {
+    events = events.filter(e => e.ip === ip);
+  }
+
+  events.sort((a, b) => b.id - a.id);
+
+  // Build per-IP summary
+  const ipMap = {};
+  for (const e of events) {
+    if (!ipMap[e.ip]) {
+      ipMap[e.ip] = { ip: e.ip, count: 0, first_seen: e.detected_at, last_seen: e.detected_at, sources: new Set(), events: [] };
+    }
+    const rec = ipMap[e.ip];
+    rec.count++;
+    if (e.detected_at < rec.first_seen) rec.first_seen = e.detected_at;
+    if (e.detected_at > rec.last_seen)  rec.last_seen  = e.detected_at;
+    rec.sources.add(e.source);
+    rec.events.push(e);
+  }
+
+  const byIP = Object.values(ipMap)
+    .map(r => ({ ...r, sources: [...r.sources] }))
+    .sort((a, b) => b.count - a.count);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayCount = events.filter(e => new Date(e.detected_at) >= today).length;
+
+  return {
+    events,
+    byIP,
+    total:       events.length,
+    uniqueIPs:   byIP.length,
+    todayCount,
+  };
+}
+
+/**
  * getSessions — returns all AI chat sessions with metadata, newest first.
  * @param {object} opts
  * @param {string} [opts.dateFrom]   — ISO date, inclusive
@@ -275,4 +362,4 @@ function getSessions({ dateFrom, dateTo, converted, search } = {}) {
   return sessions;
 }
 
-module.exports = { saveLead, saveSession, getSession, getLeads, updateLead, deleteLead, getStats, getSessions };
+module.exports = { saveLead, saveSession, getSession, getLeads, updateLead, deleteLead, getStats, getSessions, logAbuse, getAbuseLog };

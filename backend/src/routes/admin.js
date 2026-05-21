@@ -1,6 +1,6 @@
 'use strict';
 const express = require('express');
-const { getLeads, updateLead, deleteLead, getStats, getSessions } = require('../services/db');
+const { getLeads, updateLead, deleteLead, getStats, getSessions, getAbuseLog } = require('../services/db');
 
 const router = express.Router();
 
@@ -108,6 +108,19 @@ router.get('/sessions', requireAuth, (req, res) => {
   } catch (err) {
     console.error('[admin/sessions]', err.message);
     res.status(500).json({ error: 'Could not fetch sessions' });
+  }
+});
+
+// ── GET /api/admin/abuse ──────────────────────────────────────────────────────
+
+router.get('/abuse', requireAuth, (req, res) => {
+  const { dateFrom, dateTo, ip } = req.query;
+  try {
+    const result = getAbuseLog({ dateFrom, dateTo, ip });
+    res.json({ ok: true, ...result });
+  } catch (err) {
+    console.error('[admin/abuse]', err.message);
+    res.status(500).json({ error: 'Could not fetch abuse log' });
   }
 });
 
