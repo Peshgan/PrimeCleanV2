@@ -1123,19 +1123,48 @@ function initAgent() {
   if (!widget) return;
 
   // ── Minimize / Expand ──
-  let _userExpanded = false; // set true when user manually expands — prevents auto-re-minimize
+  let _userExpanded = false;
 
-  function showAvatarTooltip() {
+  const _hintMsgs = [
+    'Помогу с ценой и записью 👋',
+    'Уборка от 80 BYN — спросите! 🧹',
+    'Есть вопросы? Напишите мне 💬',
+    'Запись онлайн за 1 минуту ⚡',
+  ];
+  let _hintIdx = 0;
+  let _hintInterval = null;
+  const _tooltipEl = document.getElementById('agent-avatar-tooltip');
+
+  function showAvatarTooltip(msg) {
     if (!avatarBtn) return;
+    if (msg && _tooltipEl) _tooltipEl.innerHTML = msg;
+    avatarBtn.classList.remove('tooltip-visible');
+    void avatarBtn.offsetWidth; // restart animation
     avatarBtn.classList.add('tooltip-visible');
     clearTimeout(avatarBtn._tooltipTimer);
     avatarBtn._tooltipTimer = setTimeout(() => {
       avatarBtn.classList.remove('tooltip-visible');
-    }, 3500);
+    }, 4000);
+  }
+
+  function startHintCycle() {
+    stopHintCycle();
+    _hintInterval = setInterval(() => {
+      if (!widget.classList.contains('agent-minimized')) return;
+      showAvatarTooltip(_hintMsgs[_hintIdx % _hintMsgs.length]);
+      _hintIdx++;
+    }, 8000);
+  }
+
+  function stopHintCycle() {
+    clearInterval(_hintInterval);
+    _hintInterval = null;
+    if (_tooltipEl) _tooltipEl.innerHTML = '<strong>Алиса</strong> — AI-помощник PrimeClean';
+    if (avatarBtn) avatarBtn.classList.remove('tooltip-visible');
   }
 
   function minimizeAgent(auto = false) {
-    if (auto && _userExpanded) return; // don't auto-minimize if user explicitly opened
+    if (auto && _userExpanded) return;
     widget.classList.add('agent-minimizing');
     setTimeout(() => {
       widget.classList.add('agent-minimized');
@@ -1143,11 +1172,14 @@ function initAgent() {
     }, 320);
     if (avatarBtn) {
       avatarBtn.hidden = false;
-      showAvatarTooltip();
+      showAvatarTooltip(_hintMsgs[0]);
+      _hintIdx = 1;
+      setTimeout(startHintCycle, 5000);
     }
   }
   function expandAgent() {
     _userExpanded = true;
+    stopHintCycle();
     widget.classList.remove('agent-minimized');
     if (avatarBtn) avatarBtn.hidden = true;
   }

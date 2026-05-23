@@ -1519,8 +1519,29 @@ body[data-perf="low"] .c4-stat        { backdrop-filter: none; }
 }
 /* Show on desktop hover */
 .agent-avatar-btn:hover .agent-avatar-tooltip { opacity: 1; }
-/* Show class controlled by JS on mobile */
-.agent-avatar-btn.tooltip-visible .agent-avatar-tooltip { opacity: 1; }
+/* Show class controlled by JS — animated pop */
+.agent-avatar-btn.tooltip-visible .agent-avatar-tooltip {
+  opacity: 1;
+  animation: tooltip-hint-in .38s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes tooltip-hint-in {
+  from { opacity: 0; transform: translateY(-50%) translateX(10px) scale(.8); }
+  70%  { transform: translateY(-50%) translateX(-3px) scale(1.04); }
+  to   { opacity: 1; transform: translateY(-50%) translateX(0) scale(1); }
+}
+/* Pulse ring on avatar when hint is showing */
+.agent-avatar-btn.tooltip-visible::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid rgba(0,234,255,.5);
+  animation: hint-ring 1.2s ease-out infinite;
+}
+@keyframes hint-ring {
+  0%   { transform: scale(1);   opacity: .7; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
 .agent-avatar-btn-dot {
   position: absolute;
   bottom: 3px; right: 3px;
