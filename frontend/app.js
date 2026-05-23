@@ -1915,12 +1915,48 @@ function initForm(PERF = 'high') {
     });
   }
 
+  // ── Form validation ──
+  function validateForm() {
+    const rules = [
+      { id: 'name-input',  check: v => v.length >= 2,                  msg: 'Введите ваше имя' },
+      { id: 'phone-input', check: v => /[\d]{7}/.test(v.replace(/\D/g,'')), msg: 'Введите телефон' },
+    ];
+    let valid = true;
+    rules.forEach(({ id, check, msg }) => {
+      const input = document.getElementById(id);
+      const group = input?.closest('.f-group');
+      if (!input || !group) return;
+      group.querySelector('.f-error-msg')?.remove();
+      if (!check(input.value.trim())) {
+        group.classList.add('has-error');
+        const err = document.createElement('span');
+        err.className = 'f-error-msg';
+        err.textContent = msg;
+        group.appendChild(err);
+        valid = false;
+      } else {
+        group.classList.remove('has-error');
+      }
+    });
+    return valid;
+  }
+
+  // Clear error on input
+  ['name-input','phone-input'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', function() {
+      const group = this.closest('.f-group');
+      group?.classList.remove('has-error');
+      group?.querySelector('.f-error-msg')?.remove();
+    });
+  });
+
   // ── Form submit ──
   const form = document.getElementById('contact-form');
   if (!form) return;
   let isSubmitting = false;
   form.addEventListener('submit', async e => {
     e.preventDefault();
+    if (!validateForm()) return;
     if (isSubmitting) return;
     isSubmitting = true;
     playLidSound();

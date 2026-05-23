@@ -1043,6 +1043,23 @@ body.no-canvas #fx-canvas { display: none; }
 }
 .f-group select option { background: #0d1020; }
 .f-group textarea { resize: vertical; min-height: 80px; }
+.f-group.has-error input,
+.f-group.has-error select,
+.f-group.has-error textarea {
+  border-color: #ff4d4d !important;
+  background: rgba(255,77,77,0.06) !important;
+}
+.f-error-msg {
+  font-size: 0.72rem;
+  color: #ff4d4d;
+  margin-top: -4px;
+  animation: shakeX 0.35s ease;
+}
+@keyframes shakeX {
+  0%,100% { transform: translateX(0); }
+  25%      { transform: translateX(-6px); }
+  75%      { transform: translateX(6px); }
+}
 
 /* Date picker — invert calendar icon for dark theme */
 .f-group input[type="date"]::-webkit-calendar-picker-indicator {
