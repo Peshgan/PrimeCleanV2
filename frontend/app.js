@@ -115,6 +115,7 @@ function initSite() {
   if (PERF !== 'low') initButterflies(PERF);
   initSoundFX();
   initAgent();
+  if (PERF !== 'low') _chapParallaxTick = initChapMouseParallax();
 }
 
 
@@ -203,6 +204,16 @@ function initScrollExp(PERF) {
             el.style.setProperty('--py', `${offset * 0.2}px`);
           });
         }
+      } else {
+        // Reset mouse-parallax transforms when chapter hides
+        const inner = c.el.querySelector('.chap-inner');
+        const body  = c.el.querySelector('.chap-body');
+        const tags  = c.el.querySelector('.chap-tags');
+        const bar   = c.el.querySelector('.chap-bar');
+        if (inner) inner.style.transform = '';
+        if (body)  body.style.transform  = '';
+        if (tags)  tags.style.transform  = '';
+        if (bar)   bar.style.transform   = '';
       }
     });
     if (p >= chapDefs[chapDefs.length - 1].from) {
@@ -441,10 +452,11 @@ let _glGlobalState = null;
 let _glAnimRaf = null;
 let _glSectionVisible = false;
 let _foamCtrl = null;
+let _chapParallaxTick = null;
 
 function startGLLoop() {
   if (_glAnimRaf || document.hidden || !_glSectionVisible) return;
-  if (!_glGlobalState && !_foamCtrl) return;
+  if (!_glGlobalState && !_foamCtrl && !_chapParallaxTick) return;
   function loop() {
     _glAnimRaf = requestAnimationFrame(loop);
     if (_glGlobalState) {
@@ -452,6 +464,7 @@ function startGLLoop() {
       if (chapEl) renderToCanvas(_glGlobalState, chapEl, _glGlobalState._lastProgress || 0);
     }
     if (_foamCtrl) _foamCtrl.tick();
+    if (_chapParallaxTick) _chapParallaxTick();
   }
   _glAnimRaf = requestAnimationFrame(loop);
 }
@@ -762,6 +775,62 @@ function initCardTilt() {
       card.style.setProperty('--ty', '0deg');
     });
   });
+}
+
+/* ═══════════════════════════════
+   6b. CHAPTER MOUSE PARALLAX
+   Cursor-reactive 3-layer depth effect on visible scroll chapter.
+   Only on pointer:fine (desktop hover) devices.
+═══════════════════════════════ */
+function initChapMouseParallax() {
+  // Skip on touch-only devices
+  if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return null;
+
+  const sticky = document.getElementById('scroll-sticky');
+  if (!sticky) return null;
+
+  let rawX = 0, rawY = 0; // normalised mouse [-1..1] in sticky
+  let lx = 0, ly = 0;     // lerped values
+
+  sticky.addEventListener('mousemove', e => {
+    const r = sticky.getBoundingClientRect();
+    rawX = (e.clientX - r.left)  / r.width  * 2 - 1;
+    rawY = (e.clientY - r.top)   / r.height * 2 - 1;
+  }, { passive: true });
+
+  sticky.addEventListener('mouseleave', () => { rawX = 0; rawY = 0; }, { passive: true });
+
+  function tick() {
+    const SPEED = 0.055;
+    lx += (rawX - lx) * SPEED;
+    ly += (rawY - ly) * SPEED;
+
+    if (Math.abs(lx) < 0.001 && Math.abs(ly) < 0.001) return; // nothing to do
+
+    const visibleChap = document.querySelector('.chap.visible');
+    if (!visibleChap) return;
+
+    const inner = visibleChap.querySelector('.chap-inner');
+    const body  = visibleChap.querySelector('.chap-body');
+    const tags  = visibleChap.querySelector('.chap-tags');
+    const bar   = visibleChap.querySelector('.chap-bar');
+
+    // Layer 1 – deepest (inner container) — subtle tilt
+    if (inner) {
+      inner.style.transform =
+        `perspective(1100px) rotateX(${-ly * 3}deg) rotateY(${lx * 4}deg)`;
+    }
+    // Layer 2 – mid (text body) — slight translate
+    if (body) {
+      body.style.transform =
+        `translate(${lx * 6}px, ${ly * 4}px)`;
+    }
+    // Layer 3 – surface (tags + bar) — most movement
+    if (tags) tags.style.transform = `translate(${lx * 10}px, ${ly * 6}px)`;
+    if (bar)  bar.style.transform  = `translate(${lx * 12}px, ${ly * 7}px)`;
+  }
+
+  return tick;
 }
 
 /* ═══════════════════════════════
