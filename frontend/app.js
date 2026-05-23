@@ -494,6 +494,7 @@ function setupRevealGL(canvas) {
     uniform sampler2D uClean;
     uniform float uProgress;
     uniform float uTime;
+    uniform float uImgAspect;
     uniform vec2  uRes;
     out vec4 fragColor;
 
@@ -518,7 +519,20 @@ function setupRevealGL(canvas) {
 
     void main(){
       vec2 uv=gl_FragCoord.xy/uRes;
-      vec2 uvTex=vec2(uv.x,1.-uv.y);
+
+      // CSS-like background-size:cover — maintain image aspect ratio, crop to fill canvas
+      float canvasAspect=uRes.x/uRes.y;
+      vec2 uvFlip=vec2(uv.x,1.-uv.y);
+      vec2 uvTex;
+      if(canvasAspect<uImgAspect){
+        // canvas taller than image → crop image width, centre horizontally
+        float s=canvasAspect/uImgAspect;
+        uvTex=vec2((uvFlip.x-.5)*s+.5, uvFlip.y);
+      } else {
+        // canvas wider than image → crop image height, centre vertically
+        float s=uImgAspect/canvasAspect;
+        uvTex=vec2(uvFlip.x,(uvFlip.y-.5)*s+.5);
+      }
 
       // Water front: y=1 (top) at progress=0, falls to y=0 (bottom) at progress=1
       float front=1.-uProgress;
@@ -581,13 +595,14 @@ function setupRevealGL(canvas) {
   gl.enableVertexAttribArray(aPos);
   gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
 
-  const uProgressLoc = gl.getUniformLocation(prog, 'uProgress');
-  const uTimeLoc     = gl.getUniformLocation(prog, 'uTime');
-  const uResLoc      = gl.getUniformLocation(prog, 'uRes');
-  const uDirtyLoc    = gl.getUniformLocation(prog, 'uDirty');
-  const uCleanLoc    = gl.getUniformLocation(prog, 'uClean');
+  const uProgressLoc  = gl.getUniformLocation(prog, 'uProgress');
+  const uTimeLoc      = gl.getUniformLocation(prog, 'uTime');
+  const uImgAspectLoc = gl.getUniformLocation(prog, 'uImgAspect');
+  const uResLoc       = gl.getUniformLocation(prog, 'uRes');
+  const uDirtyLoc     = gl.getUniformLocation(prog, 'uDirty');
+  const uCleanLoc     = gl.getUniformLocation(prog, 'uClean');
 
-  // Load texture helper
+  // Load texture helper — resolves { tex, aspect }
   function loadTex(url) {
     return new Promise(resolve => {
       const tex = gl.createTexture();
@@ -600,13 +615,13 @@ function setupRevealGL(canvas) {
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         gl.generateMipmap(gl.TEXTURE_2D);
-        resolve(tex);
+        resolve({ tex, aspect: img.naturalWidth / img.naturalHeight });
       };
       img.src = url;
     });
   }
 
-  let texDirty = null, texClean = null, ready = false;
+  let texDirty = null, texClean = null, imgAspect = 16 / 9, ready = false;
   let currentProgress = 0;
   let needsRender = true;
   const t0 = performance.now();
@@ -615,7 +630,9 @@ function setupRevealGL(canvas) {
     loadTex('motion/image/room_dirty.webp'),
     loadTex('motion/image/room_clean.webp'),
   ]).then(([d, c]) => {
-    texDirty = d; texClean = c; ready = true; needsRender = true;
+    texDirty = d.tex; texClean = c.tex;
+    imgAspect = d.aspect; // both images same size, use dirty's aspect
+    ready = true; needsRender = true;
     startGLLoop();
   });
 
@@ -633,6 +650,7 @@ function setupRevealGL(canvas) {
     gl.useProgram(prog);
     gl.uniform1f(uProgressLoc, currentProgress);
     gl.uniform1f(uTimeLoc, t);
+    gl.uniform1f(uImgAspectLoc, imgAspect);
     gl.uniform2f(uResLoc, W, H);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, texDirty);
