@@ -272,8 +272,8 @@ a, button, [role="button"], input, select, textarea, label {
   overflow: hidden;
 }
 
-/* ── FOAM CANVAS ── */
-#foam-canvas {
+/* ── REVEAL CANVAS (dirty→clean WebGL) ── */
+#reveal-canvas {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -282,7 +282,7 @@ a, button, [role="button"], input, select, textarea, label {
   transform: translateZ(0);
   will-change: transform;
 }
-[data-perf="low"] #foam-canvas { display: none; }
+[data-perf="low"] #reveal-canvas { display: none; }
 .sv-scrim {
   position: absolute;
   inset: 0;

@@ -128,7 +128,7 @@ function initSite() {
 function initScrollExp(PERF) {
   const section    = document.getElementById('scroll-exp');
   const sticky     = document.getElementById('scroll-sticky');
-  const foamCanvas = document.getElementById('foam-canvas');
+  const revealCanvas = document.getElementById('reveal-canvas');
   const canvas     = document.getElementById('fx-canvas');
   const chapters = document.querySelectorAll('.chap');
   const dots     = document.querySelectorAll('.c-dot');
@@ -181,11 +181,9 @@ function initScrollExp(PERF) {
     return Math.min(1, Math.max(0, -rect.top) / maxScroll);
   }
 
-  // Foam canvas controller (set up below)
-  const foamCtrl = (PERF !== 'low' && foamCanvas) ? setupFoamGL(foamCanvas, PERF === 'medium') : null;
-  _foamCtrl = foamCtrl;
-
-  let lastChap = -1; // -1 = not yet initialised
+  // Reveal canvas controller (dirty→clean room driven by scroll progress)
+  const revealCtrl = (PERF !== 'low' && revealCanvas) ? setupRevealGL(revealCanvas) : null;
+  _revealCtrl = revealCtrl;
 
   function applyProgress(p) {
     let activeIdx = -1;
@@ -220,15 +218,7 @@ function initScrollExp(PERF) {
       chapDefs[chapDefs.length - 1].el.classList.add('visible');
       activeIdx = chapDefs.length - 1;
     }
-    // Trigger foam wipe on chapter change
-    if (activeIdx !== -1) {
-      if (lastChap === -1) {
-        lastChap = activeIdx; // initialise without wipe
-      } else if (activeIdx !== lastChap) {
-        lastChap = activeIdx;
-        if (foamCtrl) foamCtrl.triggerWipe();
-      }
-    }
+    if (revealCtrl) revealCtrl.setProgress(p);
     dots.forEach((d, i) => d.classList.toggle('active', i === activeIdx));
     ringFill.style.strokeDashoffset = CIRCUMFERENCE * (1 - p);
     progPct.textContent = Math.round(p * 100) + '%';
@@ -451,19 +441,19 @@ function renderToCanvas(state, htmlEl, progress) {
 let _glGlobalState = null;
 let _glAnimRaf = null;
 let _glSectionVisible = false;
-let _foamCtrl = null;
+let _revealCtrl = null;
 let _chapParallaxTick = null;
 
 function startGLLoop() {
   if (_glAnimRaf || document.hidden || !_glSectionVisible) return;
-  if (!_glGlobalState && !_foamCtrl && !_chapParallaxTick) return;
+  if (!_glGlobalState && !_revealCtrl && !_chapParallaxTick) return;
   function loop() {
     _glAnimRaf = requestAnimationFrame(loop);
     if (_glGlobalState) {
       const chapEl = document.getElementById('chapters');
       if (chapEl) renderToCanvas(_glGlobalState, chapEl, _glGlobalState._lastProgress || 0);
     }
-    if (_foamCtrl) _foamCtrl.tick();
+    if (_revealCtrl) _revealCtrl.tick();
     if (_chapParallaxTick) _chapParallaxTick();
   }
   _glAnimRaf = requestAnimationFrame(loop);
@@ -477,215 +467,183 @@ document.addEventListener('visibilitychange', () => {
 
 
 /* ═══════════════════════════════
-   4b. FOAM CANVAS (WebGL2)
-   Soap-foam shader — replaces scroll video.
-   isMedium = simplified (3×3 Voronoi, no FBM).
+   4b. REVEAL CANVAS (WebGL2)
+   Dirty→clean room reveal driven by scroll progress.
+   Water flows down from top, organic noise edge + cyan glow.
 ═══════════════════════════════ */
-function setupFoamGL(canvas, isMedium) {
-  const gl = canvas.getContext('webgl2', { alpha: true, premultipliedAlpha: false });
+function setupRevealGL(canvas) {
+  const gl = canvas.getContext('webgl2', { alpha: false });
   if (!gl) return null;
 
+  let W = 0, H = 0;
   function resize() {
-    canvas.width  = canvas.offsetWidth  || window.innerWidth;
-    canvas.height = canvas.offsetHeight || window.innerHeight;
-    gl.viewport(0, 0, canvas.width, canvas.height);
+    W = canvas.width  = canvas.offsetWidth  || window.innerWidth;
+    H = canvas.height = canvas.offsetHeight || window.innerHeight;
+    gl.viewport(0, 0, W, H);
   }
   resize();
-  window.addEventListener('resize', resize);
+  window.addEventListener('resize', () => { resize(); needsRender = true; });
 
   const VS = `#version 300 es
     in vec2 aPos;
     void main() { gl_Position = vec4(aPos, 0.0, 1.0); }`;
 
-  /* High-quality: 5×5 Voronoi + FBM + full iridescence */
-  const FS_HIGH = `#version 300 es
-    precision mediump float;
+  const FS = `#version 300 es
+    precision highp float;
+    uniform sampler2D uDirty;
+    uniform sampler2D uClean;
+    uniform float uProgress;
     uniform float uTime;
-    uniform float uWipeT;
-    uniform float uFoamDensity;
     uniform vec2  uRes;
     out vec4 fragColor;
 
-    vec2 hash2(vec2 p){
-      p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)));
-      return fract(sin(p)*43758.5453);
+    float hash(vec2 p){
+      p=fract(p*vec2(127.1,311.7));
+      p+=dot(p,p+19.19);
+      return fract(p.x*p.y);
     }
-    float voronoiEdge(vec2 p){
-      vec2 ip=floor(p),fp=fract(p);
-      float d1=8.,d2=8.;
-      for(int j=-2;j<=2;j++)for(int i=-2;i<=2;i++){
-        vec2 g=vec2(float(i),float(j));
-        vec2 o=.5+.5*sin(uTime*.12+6.28318*hash2(ip+g));
-        vec2 r=g+o-fp; float d=dot(r,r);
-        if(d<d1){d2=d1;d1=d;}else if(d<d2)d2=d;
-      }
-      return sqrt(d2)-sqrt(d1);
+    float noise(vec2 p){
+      vec2 i=floor(p),f=fract(p);
+      f=f*f*(3.-2.*f);
+      return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),
+                 mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);
     }
     float fbm(vec2 p){
-      float f=0.,a=.5;
-      for(int i=0;i<3;i++){
-        f+=a*(sin(p.x*2.3+p.y*1.7+uTime*.08)*.5+.5);
-        p=p*2.+vec2(.7,-.3); a*=.5;
-      }
-      return f;
+      float v=0.;
+      v+=.500*noise(p);
+      v+=.250*noise(p*2.02);
+      v+=.125*noise(p*4.05);
+      return v;
     }
+
     void main(){
       vec2 uv=gl_FragCoord.xy/uRes;
-      float ar=uRes.x/uRes.y;
-      vec2 fuv=vec2(uv.x*ar,uv.y)*5.+vec2(uTime*.03,uTime*.015);
-      float edge=clamp(voronoiEdge(fuv)*9.,0.,1.);
-      float dens=fbm(fuv*.4);
-      float bA=smoothstep(.05,.35,edge)*(.5+dens*.3);
-      float iri=edge*13.+uTime*.5;
-      vec3 iCol=vec3(sin(iri)*.5+.5,sin(iri+2.094)*.5+.5,sin(iri+4.189)*.5+.5);
-      vec3 fCol=mix(vec3(.88,.93,1.),iCol,edge*.75);
-      // wipe: 3 diagonal strips ~40° sweeping left→right
-      // foam is AHEAD of squeegee (proj > wc), clean BEHIND (proj < wc)
-      float proj=(uv.x*.766+uv.y*.643)/1.409;
-      float wc=mix(-.25,1.25,uWipeT); float sw=.055;
-      float c1=1.-smoothstep(wc,      wc+sw,    proj);
-      float c2=1.-smoothstep(wc-.08,  wc-.08+sw,proj);
-      float c3=1.-smoothstep(wc-.16,  wc-.16+sw,proj);
-      float cleaned=max(c1,max(c2,c3));
-      float inW=step(.01,uWipeT)*step(uWipeT,.99);
-      float fl=max(exp(-abs(proj-wc)*35.),
-        max(exp(-abs(proj-(wc-.08))*35.),
-            exp(-abs(proj-(wc-.16))*35.)))*inW;
-      float ft=proj*18.-uTime*2.5;
-      vec3 flCol=vec3(sin(ft)*.5+.5,sin(ft+2.094)*.5+.5,sin(ft+4.189)*.5+.5);
-      float fa=bA*(1.-cleaned)*uFoamDensity;
-      fragColor=vec4(mix(fCol,flCol,fl*.55),max(fa,fl*.75));
-    }`;
+      vec2 uvTex=vec2(uv.x,1.-uv.y);
 
-  /* Medium: 3×3 Voronoi, no FBM */
-  const FS_MED = `#version 300 es
-    precision mediump float;
-    uniform float uTime;
-    uniform float uWipeT;
-    uniform float uFoamDensity;
-    uniform vec2  uRes;
-    out vec4 fragColor;
+      // Water front: y=1 (top) at progress=0, falls to y=0 (bottom) at progress=1
+      float front=1.-uProgress;
 
-    vec2 hash2(vec2 p){
-      p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)));
-      return fract(sin(p)*43758.5453);
-    }
-    float voronoiEdge(vec2 p){
-      vec2 ip=floor(p),fp=fract(p);
-      float d1=8.,d2=8.;
-      for(int j=-1;j<=1;j++)for(int i=-1;i<=1;i++){
-        vec2 g=vec2(float(i),float(j));
-        vec2 o=.5+.5*sin(uTime*.10+6.28318*hash2(ip+g));
-        vec2 r=g+o-fp; float d=dot(r,r);
-        if(d<d1){d2=d1;d1=d;}else if(d<d2)d2=d;
-      }
-      return sqrt(d2)-sqrt(d1);
-    }
-    void main(){
-      vec2 uv=gl_FragCoord.xy/uRes;
-      float ar=uRes.x/uRes.y;
-      vec2 fuv=vec2(uv.x*ar,uv.y)*4.5+vec2(uTime*.025,uTime*.012);
-      float edge=clamp(voronoiEdge(fuv)*8.,0.,1.);
-      float bA=smoothstep(.05,.4,edge)*.6;
-      vec3 fCol=mix(vec3(.85,.92,1.),vec3(.7,.85,1.),edge*.5);
-      float proj=(uv.x*.766+uv.y*.643)/1.409;
-      float wc=mix(-.25,1.25,uWipeT); float sw=.055;
-      float c1=1.-smoothstep(wc,      wc+sw,    proj);
-      float c2=1.-smoothstep(wc-.08,  wc-.08+sw,proj);
-      float c3=1.-smoothstep(wc-.16,  wc-.16+sw,proj);
-      float cleaned=max(c1,max(c2,c3));
-      float inW=step(.01,uWipeT)*step(uWipeT,.99);
-      float fl=max(exp(-abs(proj-wc)*30.),
-        max(exp(-abs(proj-(wc-.08))*30.),
-            exp(-abs(proj-(wc-.16))*30.)))*inW*.6;
-      float fa=bA*(1.-cleaned)*uFoamDensity;
-      fragColor=vec4(fCol,max(fa,fl));
+      // Animated drip noise — makes the water edge organic and alive
+      float drip1=fbm(vec2(uv.x*5.0, uTime*0.18+uProgress*2.5));
+      float drip2=fbm(vec2(uv.x*3.0+73., uTime*0.22));
+      float jitter=(drip1-.5)*.10+(drip2-.5)*.06;
+
+      float frontLocal=front+jitter;
+      float dist=uv.y-frontLocal; // >0 = above front = clean zone
+
+      float edgeW=.028;
+      float cleanFraction=smoothstep(-edgeW,edgeW,dist);
+
+      vec4 dirty=texture(uDirty,uvTex);
+      vec4 clean=texture(uClean,uvTex);
+      vec4 col=mix(dirty,clean,cleanFraction);
+
+      // Glowing water-front edge — cyan shimmer
+      float edgeMask=max(0.,1.-abs(dist)/(edgeW*1.6));
+      edgeMask=pow(edgeMask,.65);
+      float shimmer=fbm(vec2(uv.x*9.,uTime*.45));
+      vec3 glowA=vec3(.05,.55,1.);   // blue
+      vec3 glowB=vec3(.0,.92,.95);   // cyan
+      vec3 glowCol=mix(glowA,glowB,shimmer);
+      float glowFade=smoothstep(0.,.06,uProgress)*(1.-smoothstep(.90,1.,uProgress));
+
+      col.rgb+=glowCol*edgeMask*.65*glowFade;
+      col.a=1.;
+      fragColor=col;
     }`;
 
   function compile(type, src) {
     const s = gl.createShader(type);
-    gl.shaderSource(s, src);
-    gl.compileShader(s);
+    gl.shaderSource(s, src); gl.compileShader(s);
     if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
-      console.warn('[Foam] shader:', gl.getShaderInfoLog(s));
+      console.warn('[Reveal] shader:', gl.getShaderInfoLog(s));
       gl.deleteShader(s); return null;
     }
     return s;
   }
-
   const vs = compile(gl.VERTEX_SHADER, VS);
-  const fs = compile(gl.FRAGMENT_SHADER, isMedium ? FS_MED : FS_HIGH);
+  const fs = compile(gl.FRAGMENT_SHADER, FS);
   if (!vs || !fs) return null;
 
   const prog = gl.createProgram();
   gl.attachShader(prog, vs); gl.attachShader(prog, fs);
   gl.linkProgram(prog);
   if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-    console.warn('[Foam] link:', gl.getProgramInfoLog(prog)); return null;
+    console.warn('[Reveal] link:', gl.getProgramInfoLog(prog)); return null;
   }
   gl.useProgram(prog);
 
+  // Fullscreen quad
   const buf = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]), gl.STATIC_DRAW);
   const aPos = gl.getAttribLocation(prog, 'aPos');
   gl.enableVertexAttribArray(aPos);
   gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
 
-  const uTime        = gl.getUniformLocation(prog, 'uTime');
-  const uWipeT       = gl.getUniformLocation(prog, 'uWipeT');
-  const uFoamDensity = gl.getUniformLocation(prog, 'uFoamDensity');
-  const uRes         = gl.getUniformLocation(prog, 'uRes');
+  const uProgressLoc = gl.getUniformLocation(prog, 'uProgress');
+  const uTimeLoc     = gl.getUniformLocation(prog, 'uTime');
+  const uResLoc      = gl.getUniformLocation(prog, 'uRes');
+  const uDirtyLoc    = gl.getUniformLocation(prog, 'uDirty');
+  const uCleanLoc    = gl.getUniformLocation(prog, 'uClean');
 
+  // Load texture helper
+  function loadTex(url) {
+    return new Promise(resolve => {
+      const tex = gl.createTexture();
+      const img = new Image();
+      img.onload = () => {
+        gl.bindTexture(gl.TEXTURE_2D, tex);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.generateMipmap(gl.TEXTURE_2D);
+        resolve(tex);
+      };
+      img.src = url;
+    });
+  }
+
+  let texDirty = null, texClean = null, ready = false;
+  let currentProgress = 0;
+  let needsRender = true;
   const t0 = performance.now();
 
-  // Animation state
-  let wipeT       = 0;
-  let foamDensity = 1;
-  let wipeActive  = false;
-  let wipeStart   = 0;
-  const WIPE_DUR  = 1400;
-  let returnActive = false;
-  let returnStart  = 0;
-  const RETURN_DUR = 8000;
+  Promise.all([
+    loadTex('motion/image/room_dirty.webp'),
+    loadTex('motion/image/room_clean.webp'),
+  ]).then(([d, c]) => {
+    texDirty = d; texClean = c; ready = true; needsRender = true;
+    startGLLoop();
+  });
 
-  function triggerWipe() {
-    wipeActive   = true;
-    wipeStart    = performance.now();
-    returnActive = false;
-    wipeT        = 0;
+  function setProgress(p) {
+    if (Math.abs(p - currentProgress) > 0.0005) {
+      currentProgress = p;
+      needsRender = true;
+    }
   }
 
   function tick() {
-    const now = performance.now();
-    if (wipeActive) {
-      wipeT = Math.min(1, (now - wipeStart) / WIPE_DUR);
-      if (wipeT >= 1) {
-        wipeActive   = false;
-        wipeT        = 0;      // reset: shader sees no cleaned region
-        foamDensity  = 0;      // foam gone, will breathe back
-        returnActive = true;
-        returnStart  = now;
-      }
-    }
-    if (returnActive) {
-      foamDensity = Math.min(1, (now - returnStart) / RETURN_DUR);
-      if (foamDensity >= 1) returnActive = false;
-    }
-
-    const t = (now - t0) / 1000;
-    gl.uniform1f(uTime, t);
-    gl.uniform1f(uWipeT, wipeT);
-    gl.uniform1f(uFoamDensity, foamDensity);
-    gl.uniform2f(uRes, canvas.width, canvas.height);
-    gl.enable(gl.BLEND);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-    gl.clearColor(0, 0, 0, 0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    if (!ready) return;
+    needsRender = true; // keep re-rendering for animated drip edge
+    const t = (performance.now() - t0) / 1000;
+    gl.useProgram(prog);
+    gl.uniform1f(uProgressLoc, currentProgress);
+    gl.uniform1f(uTimeLoc, t);
+    gl.uniform2f(uResLoc, W, H);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, texDirty);
+    gl.uniform1i(uDirtyLoc, 0);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, texClean);
+    gl.uniform1i(uCleanLoc, 1);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
   }
 
-  return { tick, triggerWipe };
+  return { tick, setProgress };
 }
 
 
