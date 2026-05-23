@@ -228,20 +228,27 @@ function initScrollExp(PERF) {
   }
 
   function tick() {
-    smoothProg += (targetProg - smoothProg) * LERP;
-    if (Math.abs(targetProg - smoothProg) < 0.0002) {
-      smoothProg = targetProg; isAnimating = false;
-      applyProgress(smoothProg); return;
+    if (isMobile) {
+      // Mobile: читаем позицию прямо в RAF — плавно даже при momentum scrolling
+      const live = getScrollProgress();
+      if (Math.abs(live - smoothProg) < 0.0001) { isAnimating = false; return; }
+      smoothProg = live;
+      applyProgress(smoothProg);
+      requestAnimationFrame(tick);
+    } else {
+      smoothProg += (targetProg - smoothProg) * LERP;
+      if (Math.abs(targetProg - smoothProg) < 0.0002) {
+        smoothProg = targetProg; isAnimating = false;
+        applyProgress(smoothProg); return;
+      }
+      applyProgress(smoothProg);
+      requestAnimationFrame(tick);
     }
-    applyProgress(smoothProg);
-    requestAnimationFrame(tick);
   }
 
   window.addEventListener('scroll', () => {
     targetProg = getScrollProgress();
-    if (isMobile) {
-      applyProgress(targetProg);
-    } else if (!isAnimating) {
+    if (!isAnimating) {
       isAnimating = true;
       requestAnimationFrame(tick);
     }
