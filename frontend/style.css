@@ -40,35 +40,24 @@ a, button, [role="button"], input, select, textarea, label {
 /* ══════════════════════════════════════════
    PRELOADER
 ══════════════════════════════════════════ */
+/* ══ PRELOADER ══════════════════════════════════ */
 #preloader {
   position: fixed;
   inset: 0;
   z-index: 9000;
-  background: #000;
+  background: var(--dark);
   overflow: hidden;
-}
-#pl-video {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 .pl-overlay {
   position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-end;
   padding: 32px;
-  z-index: 1;
 }
-.pl-brand {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(1.4rem, 3vw, 2rem);
-  letter-spacing: 0.12em;
-  color: rgba(255,255,255,0.5);
-}
+
+/* Ghost counter — huge outlined number, centered */
 .pl-num-wrap {
   position: absolute;
   inset: 0;
@@ -79,13 +68,101 @@ a, button, [role="button"], input, select, textarea, label {
 }
 #pl-num {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(120px, 22vw, 240px);
+  font-size: clamp(140px, 26vw, 280px);
   color: transparent;
-  -webkit-text-stroke: 1px rgba(255,255,255,0.08);
+  -webkit-text-stroke: 1px rgba(255,255,255,0.06);
   line-height: 1;
   user-select: none;
   letter-spacing: -0.02em;
+  transition: none;
 }
+
+/* Logo wrap — centered, above the ghost number */
+.pl-logo-wrap {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -58%);
+  text-align: center;
+  pointer-events: none;
+  width: 90vw;
+  max-width: 820px;
+}
+
+/* Letters row */
+.pl-letters {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(52px, 11vw, 130px);
+  line-height: 1;
+  letter-spacing: 0.04em;
+}
+
+/* Each letter: flies in with spring overshoot */
+.pl-l {
+  display: inline-block;
+  color: #fff;
+  opacity: 0;
+  transform: translateY(-70px) rotate(6deg);
+  animation: pl-l-in 0.75s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+/* CLEAN letters (6–10) come from below in cyan */
+.pl-l-c {
+  color: var(--cyan);
+  transform: translateY(70px) rotate(-6deg);
+  text-shadow: 0 0 40px rgba(0,234,255,0.35);
+}
+
+/* Stagger delays */
+.pl-l:nth-child(1)  { animation-delay: 0.05s; }
+.pl-l:nth-child(2)  { animation-delay: 0.12s; }
+.pl-l:nth-child(3)  { animation-delay: 0.19s; }
+.pl-l:nth-child(4)  { animation-delay: 0.26s; }
+.pl-l:nth-child(5)  { animation-delay: 0.33s; }
+.pl-l:nth-child(6)  { animation-delay: 0.42s; }
+.pl-l:nth-child(7)  { animation-delay: 0.49s; }
+.pl-l:nth-child(8)  { animation-delay: 0.56s; }
+.pl-l:nth-child(9)  { animation-delay: 0.63s; }
+.pl-l:nth-child(10) { animation-delay: 0.70s; }
+
+@keyframes pl-l-in {
+  to { opacity: 1; transform: none; }
+}
+
+/* Gradient line drawing itself */
+.pl-line {
+  display: block;
+  width: 100%;
+  height: 3px;
+  margin-top: 10px;
+  opacity: 0;
+  animation: pl-fade-in 0.1s ease 1.0s forwards;
+}
+.pl-line line {
+  stroke-dasharray: 600;
+  stroke-dashoffset: 600;
+  animation: pl-line-draw 0.55s cubic-bezier(0.4, 0, 0.2, 1) 1.0s forwards;
+}
+@keyframes pl-line-draw { to { stroke-dashoffset: 0; } }
+
+/* Tagline */
+.pl-tagline {
+  margin: 14px 0 0;
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(0.6rem, 1.4vw, 0.82rem);
+  letter-spacing: 0.32em;
+  color: rgba(255,255,255,0.3);
+  opacity: 0;
+  transform: translateY(6px);
+  animation: pl-tagline-in 0.5s ease 1.5s forwards;
+}
+@keyframes pl-tagline-in {
+  to { opacity: 1; transform: none; }
+}
+
+/* Progress bar + skip */
 .pl-bottom {
   display: flex;
   align-items: center;
@@ -94,7 +171,7 @@ a, button, [role="button"], input, select, textarea, label {
 .pl-track {
   flex: 1;
   height: 2px;
-  background: rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.08);
   border-radius: 2px;
   overflow: hidden;
 }
@@ -102,48 +179,22 @@ a, button, [role="button"], input, select, textarea, label {
   height: 100%;
   width: 0%;
   background: linear-gradient(90deg, var(--blue), var(--cyan));
-  transition: width 0.1s linear;
   border-radius: 2px;
 }
 #pl-skip {
-  color: rgba(255,255,255,0.4);
+  color: rgba(255,255,255,0.35);
   font-size: 0.8rem;
   font-weight: 500;
   padding: 6px 14px;
-  border: 1px solid rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.1);
   border-radius: 50px;
   transition: all 0.3s ease;
   white-space: nowrap;
   flex-shrink: 0;
 }
-#pl-skip:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
+#pl-skip:hover { color: #fff; border-color: rgba(255,255,255,0.28); }
 
-#pl-sound {
-  position: absolute;
-  top: 32px;
-  right: 32px;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: rgba(255,255,255,0.5);
-  font-size: 0.75rem;
-  cursor: pointer;
-  padding: 8px 14px;
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 50px;
-  backdrop-filter: blur(10px);
-  background: rgba(255,255,255,0.04);
-  transition: all 0.3s ease;
-  animation: pulse-sound 2s ease-in-out infinite;
-}
-#pl-sound:hover { color: #fff; border-color: rgba(255,255,255,0.25); }
-#pl-sound.hidden { opacity: 0; pointer-events: none; }
-
-@keyframes pulse-sound {
-  0%, 100% { opacity: 0.7; }
-  50% { opacity: 1; }
-}
+@keyframes pl-fade-in { to { opacity: 1; } }
 
 #preloader.exit {
   animation: pl-exit 0.9s var(--ease) forwards;
@@ -1128,7 +1179,7 @@ body.no-canvas #fx-canvas { display: none; }
   .hdr-cta { padding: 8px 16px; font-size: 0.8rem; }
 
   .pl-overlay { padding: 24px; }
-  #pl-sound { top: 24px; right: 24px; font-size: 0.7rem; }
+  .pl-logo-wrap { width: 95vw; }
 
   .chap-inner { padding: 0 20px; padding-top: 60px; }
   .chap-left, .chap-right { flex-direction: column; gap: 16px; }
@@ -1349,13 +1400,12 @@ body.no-canvas #fx-canvas { display: none; }
   }
   .c0-logo, .c0-title, .c0-sub,
   .c0-scroll-hint, .scroll-wheel::before,
-  .agent-online i, #pl-sound { animation: none !important; }
+  .agent-online i { animation: none !important; }
 }
 
 /* Low-perf mode: disable expensive effects */
 body[data-perf="low"] .chap-tags span { backdrop-filter: none; }
 body[data-perf="low"] .c4-stat        { backdrop-filter: none; }
-body[data-perf="low"] #pl-sound       { backdrop-filter: none; }
 
 /* ═══════════════════════════════════════════
    AI AGENT WIDGET

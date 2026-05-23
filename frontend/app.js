@@ -30,47 +30,18 @@ const IS_MOBILE = window.innerWidth <= 768;
    1. PRELOADER
 ═══════════════════════════════ */
 (function Preloader() {
-  const pl       = document.getElementById('preloader');
-  const plVideo  = document.getElementById('pl-video');
-  const plNum    = document.getElementById('pl-num');
-  const plBar    = document.getElementById('pl-bar');
-  const plSkip   = document.getElementById('pl-skip');
-  const plSound  = document.getElementById('pl-sound');
-  const site     = document.getElementById('site');
-
-  let soundUnlocked = false;
+  const pl     = document.getElementById('preloader');
+  const plNum  = document.getElementById('pl-num');
+  const plBar  = document.getElementById('pl-bar');
+  const plSkip = document.getElementById('pl-skip');
+  const site   = document.getElementById('site');
 
   document.body.style.overflow = 'hidden';
 
-  if (IS_MOBILE) {
-    plVideo.querySelector('source').src = 'motion/video/start_mobile.mp4';
-    plVideo.load();
-  }
-
-  // Try autoplay
-  plVideo.play().catch(() => {});
-
-  // Unlock sound on first interaction
-  function unlockSound() {
-    if (soundUnlocked) return;
-    soundUnlocked = true;
-    plVideo.muted = false;
-    plVideo.volume = 0.8;
-    plSound.classList.add('hidden');
-  }
-  plSound.addEventListener('click', unlockSound);
-  document.addEventListener('click', unlockSound, { once: true });
-  document.addEventListener('keydown', unlockSound, { once: true });
-
-  // Drive counter + bar from video time
-  plVideo.addEventListener('timeupdate', () => {
-    if (!plVideo.duration) return;
-    const p = plVideo.currentTime / plVideo.duration;
-    plNum.textContent = Math.round(p * 100);
-    plBar.style.width = (p * 100) + '%';
-  });
-
+  let exited = false;
   function exitPreloader() {
+    if (exited) return;
+    exited = true;
     window.scrollTo(0, 0);
     document.body.style.overflow = '';
     pl.classList.add('exit');
@@ -80,13 +51,27 @@ const IS_MOBILE = window.innerWidth <= 768;
     initSite();
   }
 
-  plVideo.addEventListener('ended', exitPreloader);
+  // RAF counter: 0→100 over ~3.2s, ease-out cubic
+  const DURATION = 3200;
+  const t0 = performance.now();
+  function countTick(now) {
+    const t      = Math.min(1, (now - t0) / DURATION);
+    const eased  = 1 - Math.pow(1 - t, 3);
+    const val    = Math.round(eased * 100);
+    plNum.textContent = val;
+    plBar.style.width = val + '%';
+    if (t < 1) {
+      requestAnimationFrame(countTick);
+    } else {
+      setTimeout(exitPreloader, 350);
+    }
+  }
+  requestAnimationFrame(countTick);
+
   plSkip.addEventListener('click', exitPreloader);
 
-  // Safety timeout 8s
-  setTimeout(() => {
-    if (!site.classList.contains('on')) exitPreloader();
-  }, 8000);
+  // Safety timeout
+  setTimeout(() => { if (!exited) exitPreloader(); }, 8000);
 })();
 
 

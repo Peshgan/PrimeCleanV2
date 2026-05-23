@@ -21,7 +21,6 @@
 
   <!-- Preload critical assets -->
   <link rel="preload" href="motion/video/start_mobile.mp4" as="video" type="video/mp4" media="(max-width: 768px)">
-  <link rel="preload" href="motion/video/start_site.mp4" as="video" type="video/mp4" media="(min-width: 769px)">
   <link rel="preload" href="motion/image/start_site.jpg" as="image">
 
   <link rel="stylesheet" href="style.css">
@@ -61,23 +60,33 @@
 
   <!-- ══════ PRELOADER ══════ -->
   <div id="preloader">
-    <video id="pl-video" playsinline muted preload="auto">
-      <source src="motion/video/start_site.mp4" type="video/mp4">
-    </video>
     <div class="pl-overlay">
-      <div class="pl-brand">PrimeClean</div>
+
+      <!-- Ghost counter — huge outlined number in background -->
       <div class="pl-num-wrap"><span id="pl-num">0</span></div>
+
+      <!-- Animated logo: letters fly in, line draws, tagline fades -->
+      <div class="pl-logo-wrap" aria-label="PrimeClean">
+        <div class="pl-letters">
+          <span class="pl-l">P</span><span class="pl-l">R</span><span class="pl-l">I</span><span class="pl-l">M</span><span class="pl-l">E</span><span class="pl-l pl-l-c">C</span><span class="pl-l pl-l-c">L</span><span class="pl-l pl-l-c">E</span><span class="pl-l pl-l-c">A</span><span class="pl-l pl-l-c">N</span>
+        </div>
+        <svg class="pl-line" viewBox="0 0 600 3" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="plg" x1="0%" x2="100%">
+              <stop offset="0%" stop-color="#1a6cff"/>
+              <stop offset="100%" stop-color="#00eaff"/>
+            </linearGradient>
+          </defs>
+          <line x1="0" y1="1.5" x2="600" y2="1.5" stroke="url(#plg)" stroke-width="3"/>
+        </svg>
+        <p class="pl-tagline">ЧИСТОТА БЕЗ КОМПРОМИССОВ</p>
+      </div>
+
+      <!-- Progress bar + skip -->
       <div class="pl-bottom">
         <div class="pl-track"><div id="pl-bar"></div></div>
         <button id="pl-skip">Skip ›</button>
       </div>
-    </div>
-    <div id="pl-sound">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-        <path d="M11 5 6 9H2v6h4l5 4V5z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        <path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-      Click for sound
     </div>
   </div>
 
