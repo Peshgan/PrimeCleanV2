@@ -1467,7 +1467,7 @@ body[data-perf="low"] .c4-stat        { backdrop-filter: none; }
   background: rgba(6,8,15,.9);
   border: 2px solid rgba(0,234,255,.45);
   box-shadow: 0 4px 24px rgba(0,0,0,.6), 0 0 0 1px rgba(0,234,255,.15);
-  overflow: hidden;
+  overflow: visible;
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
