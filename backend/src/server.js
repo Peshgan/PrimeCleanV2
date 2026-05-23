@@ -32,8 +32,8 @@ app.use(cors({
     if (!origin) return cb(null, true);
     if (origin.startsWith('http://localhost') || origin.startsWith('http://127.')) return cb(null, true);
     if (origin.endsWith('.vercel.app')) return cb(null, true);
-    // primeclean.бел — unicode and punycode forms
-    if (origin.endsWith('.бел') || origin.endsWith('.xn--90ae')) return cb(null, true);
+    // праймклин.бай — unicode and punycode forms
+    if (origin.endsWith('.бай') || origin.endsWith('.xn--80abz')) return cb(null, true);
     if (explicitOrigins.length === 0 || explicitOrigins.includes(origin)) return cb(null, true);
     cb(new Error('CORS: origin not allowed'));
   },
