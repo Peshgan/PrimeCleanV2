@@ -140,10 +140,10 @@ function initSite() {
    – HTML-in-Canvas: WebGL renders chapters with shaders
 ═══════════════════════════════ */
 function initScrollExp(PERF) {
-  const section  = document.getElementById('scroll-exp');
-  const sticky   = document.getElementById('scroll-sticky');
-  const sv       = document.getElementById('sv');
-  const canvas   = document.getElementById('fx-canvas');
+  const section    = document.getElementById('scroll-exp');
+  const sticky     = document.getElementById('scroll-sticky');
+  const foamCanvas = document.getElementById('foam-canvas');
+  const canvas     = document.getElementById('fx-canvas');
   const chapters = document.querySelectorAll('.chap');
   const dots     = document.querySelectorAll('.c-dot');
   const ringFill = document.getElementById('ring-fill');
@@ -195,10 +195,13 @@ function initScrollExp(PERF) {
     return Math.min(1, Math.max(0, -rect.top) / maxScroll);
   }
 
+  // Foam canvas controller (set up below)
+  const foamCtrl = (PERF !== 'low' && foamCanvas) ? setupFoamGL(foamCanvas, PERF === 'medium') : null;
+  _foamCtrl = foamCtrl;
+
+  let lastChap = -1; // -1 = not yet initialised
+
   function applyProgress(p) {
-    if (sv.readyState >= 2 && sv.duration) {
-      sv.currentTime = p * sv.duration;
-    }
     let activeIdx = -1;
     chapDefs.forEach((c, i) => {
       const visible = p >= c.from && p < c.to;
@@ -220,6 +223,15 @@ function initScrollExp(PERF) {
     if (p >= chapDefs[chapDefs.length - 1].from) {
       chapDefs[chapDefs.length - 1].el.classList.add('visible');
       activeIdx = chapDefs.length - 1;
+    }
+    // Trigger foam wipe on chapter change
+    if (activeIdx !== -1) {
+      if (lastChap === -1) {
+        lastChap = activeIdx; // initialise without wipe
+      } else if (activeIdx !== lastChap) {
+        lastChap = activeIdx;
+        if (foamCtrl) foamCtrl.triggerWipe();
+      }
     }
     dots.forEach((d, i) => d.classList.toggle('active', i === activeIdx));
     ringFill.style.strokeDashoffset = CIRCUMFERENCE * (1 - p);
@@ -248,17 +260,6 @@ function initScrollExp(PERF) {
       requestAnimationFrame(tick);
     }
   }, { passive: true });
-
-  if (IS_MOBILE) {
-    sv.querySelector('source').src = 'motion/video/scroll_mobile.mp4';
-  }
-  // Force video load on iOS (ignores preload="auto")
-  sv.load();
-  // iOS requires a play() call before seeking is possible
-  const unlockScrollVideo = () => {
-    sv.play().then(() => { sv.pause(); sv.currentTime = 0; }).catch(() => {});
-  };
-  document.addEventListener('touchstart', unlockScrollVideo, { once: true, passive: true });
 
   // Initial render
   targetProg = smoothProg = getScrollProgress();
@@ -454,13 +455,18 @@ function renderToCanvas(state, htmlEl, progress) {
 let _glGlobalState = null;
 let _glAnimRaf = null;
 let _glSectionVisible = false;
+let _foamCtrl = null;
 
 function startGLLoop() {
-  if (_glAnimRaf || !_glGlobalState || document.hidden || !_glSectionVisible) return;
+  if (_glAnimRaf || document.hidden || !_glSectionVisible) return;
+  if (!_glGlobalState && !_foamCtrl) return;
   function loop() {
     _glAnimRaf = requestAnimationFrame(loop);
-    const chapEl = document.getElementById('chapters');
-    if (chapEl && _glGlobalState) renderToCanvas(_glGlobalState, chapEl, _glGlobalState._lastProgress || 0);
+    if (_glGlobalState) {
+      const chapEl = document.getElementById('chapters');
+      if (chapEl) renderToCanvas(_glGlobalState, chapEl, _glGlobalState._lastProgress || 0);
+    }
+    if (_foamCtrl) _foamCtrl.tick();
   }
   _glAnimRaf = requestAnimationFrame(loop);
 }
@@ -470,6 +476,220 @@ function stopGLLoop() {
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) stopGLLoop(); else startGLLoop();
 });
+
+
+/* ═══════════════════════════════
+   4b. FOAM CANVAS (WebGL2)
+   Soap-foam shader — replaces scroll video.
+   isMedium = simplified (3×3 Voronoi, no FBM).
+═══════════════════════════════ */
+function setupFoamGL(canvas, isMedium) {
+  const gl = canvas.getContext('webgl2', { alpha: true, premultipliedAlpha: false });
+  if (!gl) return null;
+
+  function resize() {
+    canvas.width  = canvas.offsetWidth  || window.innerWidth;
+    canvas.height = canvas.offsetHeight || window.innerHeight;
+    gl.viewport(0, 0, canvas.width, canvas.height);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  const VS = `#version 300 es
+    in vec2 aPos;
+    void main() { gl_Position = vec4(aPos, 0.0, 1.0); }`;
+
+  /* High-quality: 5×5 Voronoi + FBM + full iridescence */
+  const FS_HIGH = `#version 300 es
+    precision mediump float;
+    uniform float uTime;
+    uniform float uWipeT;
+    uniform float uFoamDensity;
+    uniform vec2  uRes;
+    out vec4 fragColor;
+
+    vec2 hash2(vec2 p){
+      p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)));
+      return fract(sin(p)*43758.5453);
+    }
+    float voronoiEdge(vec2 p){
+      vec2 ip=floor(p),fp=fract(p);
+      float d1=8.,d2=8.;
+      for(int j=-2;j<=2;j++)for(int i=-2;i<=2;i++){
+        vec2 g=vec2(float(i),float(j));
+        vec2 o=.5+.5*sin(uTime*.12+6.28318*hash2(ip+g));
+        vec2 r=g+o-fp; float d=dot(r,r);
+        if(d<d1){d2=d1;d1=d;}else if(d<d2)d2=d;
+      }
+      return sqrt(d2)-sqrt(d1);
+    }
+    float fbm(vec2 p){
+      float f=0.,a=.5;
+      for(int i=0;i<3;i++){
+        f+=a*(sin(p.x*2.3+p.y*1.7+uTime*.08)*.5+.5);
+        p=p*2.+vec2(.7,-.3); a*=.5;
+      }
+      return f;
+    }
+    void main(){
+      vec2 uv=gl_FragCoord.xy/uRes;
+      float ar=uRes.x/uRes.y;
+      vec2 fuv=vec2(uv.x*ar,uv.y)*5.+vec2(uTime*.03,uTime*.015);
+      float edge=clamp(voronoiEdge(fuv)*9.,0.,1.);
+      float dens=fbm(fuv*.4);
+      float bA=smoothstep(.05,.35,edge)*(.5+dens*.3);
+      float iri=edge*13.+uTime*.5;
+      vec3 iCol=vec3(sin(iri)*.5+.5,sin(iri+2.094)*.5+.5,sin(iri+4.189)*.5+.5);
+      vec3 fCol=mix(vec3(.88,.93,1.),iCol,edge*.75);
+      // wipe: 3 diagonal strips ~40° sweeping left→right
+      // foam is AHEAD of squeegee (proj > wc), clean BEHIND (proj < wc)
+      float proj=(uv.x*.766+uv.y*.643)/1.409;
+      float wc=mix(-.25,1.25,uWipeT); float sw=.055;
+      float c1=1.-smoothstep(wc,      wc+sw,    proj);
+      float c2=1.-smoothstep(wc-.08,  wc-.08+sw,proj);
+      float c3=1.-smoothstep(wc-.16,  wc-.16+sw,proj);
+      float cleaned=max(c1,max(c2,c3));
+      float inW=step(.01,uWipeT)*step(uWipeT,.99);
+      float fl=max(exp(-abs(proj-wc)*35.),
+        max(exp(-abs(proj-(wc-.08))*35.),
+            exp(-abs(proj-(wc-.16))*35.)))*inW;
+      float ft=proj*18.-uTime*2.5;
+      vec3 flCol=vec3(sin(ft)*.5+.5,sin(ft+2.094)*.5+.5,sin(ft+4.189)*.5+.5);
+      float fa=bA*(1.-cleaned)*uFoamDensity;
+      fragColor=vec4(mix(fCol,flCol,fl*.55),max(fa,fl*.75));
+    }`;
+
+  /* Medium: 3×3 Voronoi, no FBM */
+  const FS_MED = `#version 300 es
+    precision mediump float;
+    uniform float uTime;
+    uniform float uWipeT;
+    uniform float uFoamDensity;
+    uniform vec2  uRes;
+    out vec4 fragColor;
+
+    vec2 hash2(vec2 p){
+      p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3)));
+      return fract(sin(p)*43758.5453);
+    }
+    float voronoiEdge(vec2 p){
+      vec2 ip=floor(p),fp=fract(p);
+      float d1=8.,d2=8.;
+      for(int j=-1;j<=1;j++)for(int i=-1;i<=1;i++){
+        vec2 g=vec2(float(i),float(j));
+        vec2 o=.5+.5*sin(uTime*.10+6.28318*hash2(ip+g));
+        vec2 r=g+o-fp; float d=dot(r,r);
+        if(d<d1){d2=d1;d1=d;}else if(d<d2)d2=d;
+      }
+      return sqrt(d2)-sqrt(d1);
+    }
+    void main(){
+      vec2 uv=gl_FragCoord.xy/uRes;
+      float ar=uRes.x/uRes.y;
+      vec2 fuv=vec2(uv.x*ar,uv.y)*4.5+vec2(uTime*.025,uTime*.012);
+      float edge=clamp(voronoiEdge(fuv)*8.,0.,1.);
+      float bA=smoothstep(.05,.4,edge)*.6;
+      vec3 fCol=mix(vec3(.85,.92,1.),vec3(.7,.85,1.),edge*.5);
+      float proj=(uv.x*.766+uv.y*.643)/1.409;
+      float wc=mix(-.25,1.25,uWipeT); float sw=.055;
+      float c1=1.-smoothstep(wc,      wc+sw,    proj);
+      float c2=1.-smoothstep(wc-.08,  wc-.08+sw,proj);
+      float c3=1.-smoothstep(wc-.16,  wc-.16+sw,proj);
+      float cleaned=max(c1,max(c2,c3));
+      float inW=step(.01,uWipeT)*step(uWipeT,.99);
+      float fl=max(exp(-abs(proj-wc)*30.),
+        max(exp(-abs(proj-(wc-.08))*30.),
+            exp(-abs(proj-(wc-.16))*30.)))*inW*.6;
+      float fa=bA*(1.-cleaned)*uFoamDensity;
+      fragColor=vec4(fCol,max(fa,fl));
+    }`;
+
+  function compile(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+      console.warn('[Foam] shader:', gl.getShaderInfoLog(s));
+      gl.deleteShader(s); return null;
+    }
+    return s;
+  }
+
+  const vs = compile(gl.VERTEX_SHADER, VS);
+  const fs = compile(gl.FRAGMENT_SHADER, isMedium ? FS_MED : FS_HIGH);
+  if (!vs || !fs) return null;
+
+  const prog = gl.createProgram();
+  gl.attachShader(prog, vs); gl.attachShader(prog, fs);
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+    console.warn('[Foam] link:', gl.getProgramInfoLog(prog)); return null;
+  }
+  gl.useProgram(prog);
+
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+  const aPos = gl.getAttribLocation(prog, 'aPos');
+  gl.enableVertexAttribArray(aPos);
+  gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+  const uTime        = gl.getUniformLocation(prog, 'uTime');
+  const uWipeT       = gl.getUniformLocation(prog, 'uWipeT');
+  const uFoamDensity = gl.getUniformLocation(prog, 'uFoamDensity');
+  const uRes         = gl.getUniformLocation(prog, 'uRes');
+
+  const t0 = performance.now();
+
+  // Animation state
+  let wipeT       = 0;
+  let foamDensity = 1;
+  let wipeActive  = false;
+  let wipeStart   = 0;
+  const WIPE_DUR  = 1400;
+  let returnActive = false;
+  let returnStart  = 0;
+  const RETURN_DUR = 8000;
+
+  function triggerWipe() {
+    wipeActive   = true;
+    wipeStart    = performance.now();
+    returnActive = false;
+    wipeT        = 0;
+  }
+
+  function tick() {
+    const now = performance.now();
+    if (wipeActive) {
+      wipeT = Math.min(1, (now - wipeStart) / WIPE_DUR);
+      if (wipeT >= 1) {
+        wipeActive   = false;
+        wipeT        = 0;      // reset: shader sees no cleaned region
+        foamDensity  = 0;      // foam gone, will breathe back
+        returnActive = true;
+        returnStart  = now;
+      }
+    }
+    if (returnActive) {
+      foamDensity = Math.min(1, (now - returnStart) / RETURN_DUR);
+      if (foamDensity >= 1) returnActive = false;
+    }
+
+    const t = (now - t0) / 1000;
+    gl.uniform1f(uTime, t);
+    gl.uniform1f(uWipeT, wipeT);
+    gl.uniform1f(uFoamDensity, foamDensity);
+    gl.uniform2f(uRes, canvas.width, canvas.height);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  }
+
+  return { tick, triggerWipe };
+}
+
 
 /* ═══════════════════════════════
    5. CUSTOM CURSOR

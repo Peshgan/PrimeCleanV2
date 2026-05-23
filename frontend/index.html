@@ -102,10 +102,8 @@
       <!-- STICKY VIEWPORT -->
       <div id="scroll-sticky">
 
-        <!-- VIDEO (scroll-driven) — metadata only, loaded on demand -->
-        <video id="sv" muted preload="metadata" playsinline>
-          <source src="motion/video/Backgroundscrollanimation.mp4" type="video/mp4">
-        </video>
+        <!-- FOAM CANVAS (WebGL2 soap-foam shader, replaces scroll video) -->
+        <canvas id="foam-canvas"></canvas>
 
         <!-- Dark scrim for readability -->
         <div class="sv-scrim"></div>
