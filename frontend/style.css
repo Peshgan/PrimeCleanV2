@@ -1483,7 +1483,7 @@ body[data-perf="low"] .c4-stat        { backdrop-filter: none; }
 
 /* Show face (upper part of image) in the avatar circle */
 .agent-avatar-btn picture { width: 100%; height: 100%; display: block; overflow: hidden; border-radius: 50%; }
-.agent-avatar-btn img { width: 100%; height: 110%; object-fit: cover; object-position: 50% 2%; display: block; }
+.agent-avatar-btn img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; display: block; }
 
 /* Tooltip */
 .agent-avatar-tooltip {
