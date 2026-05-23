@@ -1884,8 +1884,8 @@ function initForm(PERF = 'high') {
   function showSuccess() {
     if (!fsOverlay) return;
     // Аналитика: конверсия при отправке формы
-    if (typeof gtag === 'function') gtag('event', 'conversion', { event_category: 'lead', event_label: 'form_submit' });
-    if (typeof ym === 'function') ym(0, 'reachGoal', 'form_submit');
+    if (typeof gtag === 'function') gtag('event', 'conversion', { send_to: 'AW-18108437624/p1SVCMnv1aIcEPio47pD', value: 1.0, currency: 'USD' });
+    if (typeof ym === 'function') ym(108686777, 'reachGoal', 'form_submit');
     // сбросить анимации переоткрывая оверлей
     fsOverlay.hidden = false;
     // перезапуск CSS-анимаций карточки
