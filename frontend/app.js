@@ -1620,12 +1620,17 @@ function initAgent() {
     typing.classList.remove('hidden');
     messages.scrollTop = messages.scrollHeight;
 
+    // Keep history under 30 messages to stay within backend limit
+    if (history.length > 30) history.splice(0, history.length - 30);
+
+    let httpStatus = 0;
     try {
       const res  = await fetch(CHAT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: history, sessionId: SESSION_ID }),
       });
+      httpStatus = res.status;
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data   = await res.json();
       const raw    = data.reply || 'Не смогла ответить — попробуйте ещё раз.';
@@ -1640,7 +1645,12 @@ function initAgent() {
       }
     } catch {
       typing.classList.add('hidden');
-      await typewriteMessage('Ошибка соединения. Попробуйте позже.');
+      const errMsg = httpStatus === 429
+        ? 'Слишком много сообщений — подождите минуту и попробуйте снова.'
+        : httpStatus >= 500
+          ? 'Сервер временно недоступен. Попробуйте через несколько минут.'
+          : 'Ошибка соединения. Проверьте интернет и попробуйте ещё раз.';
+      await typewriteMessage(errMsg);
     }
 
     setState('listening');

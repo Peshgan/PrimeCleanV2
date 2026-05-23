@@ -32,8 +32,14 @@ router.post('/', chatLimit, async (req, res) => {
     return res.status(400).json({ error: 'conversation too long' });
   }
 
+  // All messages must have only user/assistant roles — block prompt injection via system role
+  const validRoles = new Set(['user', 'assistant']);
+  if (messages.some(m => !validRoles.has(m.role) || typeof m.content !== 'string')) {
+    return res.status(400).json({ error: 'invalid message format' });
+  }
+
   const last = messages[messages.length - 1];
-  if (!last || last.role !== 'user' || typeof last.content !== 'string') {
+  if (!last || last.role !== 'user') {
     return res.status(400).json({ error: 'last message must be from user' });
   }
   if (last.content.trim().length === 0 || last.content.length > 2000) {

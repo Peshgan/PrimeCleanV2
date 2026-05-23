@@ -1,11 +1,22 @@
 'use strict';
-const express = require('express');
+const express    = require('express');
+const rateLimit  = require('express-rate-limit');
 const {
   getLeads, updateLead, deleteLead, getStats, getSessions, getAbuseLog,
   saveExpense, updateExpense, deleteExpense, getExpenses, getRevenue,
 } = require('../services/db');
 
 const router = express.Router();
+
+// 5 failed login attempts per IP per 15 minutes
+const loginLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  skipSuccessfulRequests: true,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, error: 'Too many login attempts. Try again in 15 minutes.' },
+});
 
 // ── Auth middleware ───────────────────────────────────────────────────────────
 
@@ -25,7 +36,7 @@ function requireAuth(req, res, next) {
 
 // ── POST /api/admin/login ─────────────────────────────────────────────────────
 
-router.post('/login', (req, res) => {
+router.post('/login', loginLimit, (req, res) => {
   const { password } = req.body || {};
   const expected = process.env.ADMIN_TOKEN;
 
