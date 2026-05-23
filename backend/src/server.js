@@ -22,10 +22,20 @@ app.use(compression());
 app.set('trust proxy', 1);
 
 // ── CORS ──
-const allowedOrigins = process.env.FRONTEND_URL
+const explicitOrigins = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL.split(',').map(s => s.trim())
-  : true;
-app.use(cors({ origin: allowedOrigins }));
+  : [];
+
+app.use(cors({
+  origin: (origin, cb) => {
+    // Allow server-to-server (no origin), local dev, any *.vercel.app preview, and explicit origins
+    if (!origin) return cb(null, true);
+    if (origin.startsWith('http://localhost') || origin.startsWith('http://127.')) return cb(null, true);
+    if (origin.endsWith('.vercel.app')) return cb(null, true);
+    if (explicitOrigins.length === 0 || explicitOrigins.includes(origin)) return cb(null, true);
+    cb(new Error('CORS: origin not allowed'));
+  },
+}));
 
 // ── JSON body ──
 app.use(express.json({ limit: '32kb' }));
