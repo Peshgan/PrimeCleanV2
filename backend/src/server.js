@@ -11,6 +11,7 @@ const chatRoutes    = require('./routes/chat');
 const leadsRoutes   = require('./routes/leads');
 const webhookRoutes = require('./routes/webhook');
 const adminRoutes   = require('./routes/admin');
+const { startBackupCron } = require('./services/backup');
 
 const app  = express();
 const PORT = process.env.PORT || 4000;
@@ -75,4 +76,7 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-app.listen(PORT, () => console.log(`[PrimeClean API] running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`[PrimeClean API] running on port ${PORT}`);
+  startBackupCron();
+});
