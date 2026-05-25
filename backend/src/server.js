@@ -32,6 +32,7 @@ app.use(cors({
     if (!origin) return cb(null, true);
     if (origin.startsWith('http://localhost') || origin.startsWith('http://127.')) return cb(null, true);
     if (origin.endsWith('.vercel.app')) return cb(null, true);
+    if (origin.endsWith('.railway.app')) return cb(null, true);
     // праймклин.бел — unicode and punycode forms
     if (origin.endsWith('.бел') || origin.endsWith('.xn--90ais')) return cb(null, true);
     if (explicitOrigins.length === 0 || explicitOrigins.includes(origin)) return cb(null, true);
